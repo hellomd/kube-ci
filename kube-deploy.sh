@@ -10,7 +10,8 @@ gcloud --quiet config set container/cluster ${GOOGLE_CLUSTER_NAME}
 gcloud --quiet container clusters get-credentials ${GOOGLE_CLUSTER_NAME}
 
 if [ ! -e "${CIRCLE_WORKING_DIRECTORY}/kube.yml" ]
-    cat /scripts/kube-template.yml | envsubst > "${CIRCLE_WORKING_DIRECTORY}/kube.yml"
 then
+    cat /scripts/kube-template.yml | envsubst > "${CIRCLE_WORKING_DIRECTORY}/kube.yml"
+fi
 
 kubectl apply -f "${CIRCLE_WORKING_DIRECTORY}/kube.yml"
