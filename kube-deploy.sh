@@ -1,5 +1,7 @@
 #! /bin/bash
 
+echo "Deploying ${CIRCLE_PROJECT_REPONAME} to ${GOOGLE_PROJECT_ID}/${GOOGLE_CLUSTER_NAME}"
+
 echo ${GOOGLE_AUTH} | base64 -i --decode > ${HOME}/gcp-key.json
 gcloud auth activate-service-account --key-file ${HOME}/gcp-key.json
 gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
