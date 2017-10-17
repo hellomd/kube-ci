@@ -112,4 +112,9 @@ spec:
             secretKeyRef:
               name: shared-env
               key: mysqlConnString
+        - name: SENDGRID_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: sendgridApiKey
         
