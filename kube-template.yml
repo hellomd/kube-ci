@@ -21,7 +21,7 @@ metadata:
   labels:
     app: $CIRCLE_PROJECT_REPONAME
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: $CIRCLE_PROJECT_REPONAME
