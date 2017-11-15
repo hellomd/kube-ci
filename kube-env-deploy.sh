@@ -1,6 +1,13 @@
 #! /bin/bash
 
-echo "Deploying ${CIRCLE_PROJECT_REPONAME} to ${GOOGLE_PROJECT_ID}/${GOOGLE_CLUSTER_NAME}"
+if [ -z "$1" ]
+  then 
+    echo "No environment argument given, assuming development"
+fi
+
+ENV=${1:-development}
+echo "Environment $ENV"
+echo "Deploying ${CIRCLE_PROJECT_REPONAME} $ENV to ${GOOGLE_PROJECT_ID}/${GOOGLE_CLUSTER_NAME}"
 
 echo ${GOOGLE_AUTH} | base64 -i --decode > ${HOME}/gcp-key.json
 gcloud auth activate-service-account --key-file ${HOME}/gcp-key.json
@@ -18,7 +25,7 @@ else
 fi
 
 docker build -t us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1 .
-docker tag us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1 us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME:latest
-gcloud docker -- push us.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}
+docker tag us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1 us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME:$ENV
+gcloud docker -- push us.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}:$ENV
 
 kubectl apply -f kube.yml
