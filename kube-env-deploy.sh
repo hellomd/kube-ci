@@ -7,6 +7,7 @@ fi
 
 # Find environment
 ENV=${1:-development}
+echo export ENV=$ENV
 
 # Define deployment variables considering environment
 CLUSTER=${GOOGLE_DEVELOPMENT_CLUSTER_NAME}
