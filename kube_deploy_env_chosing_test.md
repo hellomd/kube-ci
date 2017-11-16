@@ -1,9 +1,31 @@
 
 # Deploy to development (default) env test
-export GOOGLE_DEVELOPMENT_CLUSTER_NAME="cluster-development" && export GOOGLE_DEVELOPMENT_COMPUTE_ZONE="czone-development" && ./kube-env-deploy.sh
+export GOOGLE_CLUSTER_NAME_DEVELOPMENT="cluster-development" && export GOOGLE_COMPUTE_ZONE_DEVELOPMENT="czone-development" && ./kube-env-deploy.sh
+
+  ## Expected output
+    ```
+        No environment argument given, assuming development
+        Deploying  development to /
+        Chosen Cluster: cluster-development
+        Chosen Compute_Zone: czone-development
+    ```
 
 # Deploy to development env by choice
-export GOOGLE_DEVELOPMENT_CLUSTER_NAME="cluster-development" && export GOOGLE_DEVELOPMENT_COMPUTE_ZONE="czone-development" && ./kube-env-deploy.sh development
+export GOOGLE_CLUSTER_NAME_DEVELOPMENT="cluster-development" && export GOOGLE_COMPUTE_ZONE_DEVELOPMENT="czone-development" && ./kube-env-deploy.sh development
+
+  ## Expected output
+    ```
+        Deploying  development to /
+        Chosen Cluster: cluster-development
+        Chosen Compute_Zone: czone-development
+    ```
 
 # Deploy to production env
-export GOOGLE_PRODUCTION_CLUSTER_NAME="cluster-production" && export GOOGLE_PRODUCTION_COMPUTE_ZONE="czone-production" && ./kube-env-deploy.sh production
+export GOOGLE_CLUSTER_NAME_PRODUCTION="cluster-production" && export GOOGLE_COMPUTE_ZONE_PRODUCTION="czone-production" && ./kube-env-deploy.sh production
+
+ ## Expected output
+    ```
+        Deploying  production to /
+        Chosen Cluster: cluster-production
+        Chosen Compute_Zone: czone-production
+    ```
