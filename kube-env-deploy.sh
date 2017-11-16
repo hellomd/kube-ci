@@ -10,8 +10,6 @@ ENV=${1:-development}
 
 # Define deployment variables considering environment
 CLUSTER=${GOOGLE_DEVELOPMENT_CLUSTER_NAME}
-echo "Deploying ${CIRCLE_PROJECT_REPONAME} $ENV to ${GOOGLE_PROJECT_ID}/$CLUSTER"
-
 COMPUTE_ZONE=${GOOGLE_DEVELOPMENT_COMPUTE_ZONE}
 
 case "$ENV" in 
@@ -29,6 +27,7 @@ case "$ENV" in
     ;;
 esac
 
+echo "Deploying ${CIRCLE_PROJECT_REPONAME} $ENV to ${GOOGLE_PROJECT_ID}/$CLUSTER"
 echo "Chosen Cluster: $CLUSTER"
 echo "Chosen Compute_Zone: $COMPUTE_ZONE"
 
