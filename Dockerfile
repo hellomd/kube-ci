@@ -12,3 +12,4 @@ RUN \
 RUN mkdir /scripts
 COPY kube-template.yml /scripts/kube-template.yml
 COPY kube-deploy.sh /scripts/kube-deploy.sh
+COPY kube-env-deploy.sh /scripts/kube-env-deploy.sh
