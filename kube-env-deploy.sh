@@ -7,10 +7,11 @@ fi
 
 # Find environment
 ENV=${1:-development}
-echo "Deploying ${CIRCLE_PROJECT_REPONAME} $ENV to ${GOOGLE_PROJECT_ID}/${GOOGLE_CLUSTER_NAME}"
 
 # Define deployment variables considering environment
 CLUSTER=${GOOGLE_DEVELOPMENT_CLUSTER_NAME}
+echo "Deploying ${CIRCLE_PROJECT_REPONAME} $ENV to ${GOOGLE_PROJECT_ID}/$CLUSTER"
+
 COMPUTE_ZONE=${GOOGLE_DEVELOPMENT_COMPUTE_ZONE}
 
 case "$ENV" in 
