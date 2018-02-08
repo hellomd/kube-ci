@@ -1,7 +1,7 @@
 #! /bin/bash
 
 if [ -z "$1" ]
-  then 
+  then
     echo "No environment argument given, assuming development"
 fi
 
@@ -13,7 +13,7 @@ echo export ENV=$ENV
 CLUSTER=${GOOGLE_DEVELOPMENT_CLUSTER_NAME}
 COMPUTE_ZONE=${GOOGLE_DEVELOPMENT_COMPUTE_ZONE}
 
-case "$ENV" in 
+case "$ENV" in
 "production")
     CLUSTER=${GOOGLE_CLUSTER_NAME_PRODUCTION}
     COMPUTE_ZONE=${GOOGLE_COMPUTE_ZONE_PRODUCTION}
@@ -51,8 +51,8 @@ fi
 
 # Create deploymeny
 docker build -t us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1 .
-docker tag us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1 us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME:$CIRCLE_BRANCH
-gcloud docker -- push us.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}:$CIRCLE_BRANCH
+docker tag us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1 us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1
+gcloud docker -- push us.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}:$CIRCLE_SHA1
 
 # Apply deployment
 kubectl apply -f kube.yml
