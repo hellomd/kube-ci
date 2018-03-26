@@ -1,0 +1,118 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: $CIRCLE_PROJECT_REPONAME-workers
+  namespace: default
+  labels:
+    app: $CIRCLE_PROJECT_REPONAME-workers
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: $CIRCLE_PROJECT_REPONAME-workers
+  template:
+    metadata:
+      labels:
+        app: $CIRCLE_PROJECT_REPONAME-workers
+    spec:
+      containers:
+      - name: $CIRCLE_PROJECT_REPONAME-workers
+        image: us.gcr.io/hellomd-181719/$CIRCLE_PROJECT_REPONAME-workers:$CIRCLE_SHA1
+        imagePullPolicy: Always
+        env:
+        - name: AMQP_URL
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: amqpUrl
+        - name: ENV
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: env
+        - name: GATEWAY_URL
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: gatewayUrl
+        - name: LOGMATIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: logmaticApiKey
+        - name: MONGO_URL
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: mongoUrl
+        - name: LEGACY_MONGO_URL
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: legacyMongoUrl
+        - name: SECRET
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: secret
+        - name: SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: sentryDsn
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: awsKey
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: awsSecret
+        - name: AWS_DEFAULT_REGION
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: awsRegion
+        - name: ELASTIC_URL
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: elasticUrl
+        - name: ELASTIC_USER
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: elasticUser
+        - name: ELASTIC_PASS
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: elasticPass
+        - name: MYSQL_CONN_STRING
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: mysqlConnString
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: cloudsql-db-credentials
+              key: username
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: cloudsql-db-credentials
+              key: password
+        - name: SENDGRID_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: sendgridApiKey
+        - name: SITE_URL
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: siteUrl
