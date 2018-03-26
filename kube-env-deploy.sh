@@ -48,6 +48,13 @@ else
     cat /scripts/kube-template.yml | envsubst > kube.yml
 fi
 
+if [ -e kube-cron.yml ]
+then
+    cat kube-cron.yml | envsubst > kube-cron2.yml
+    mv kube-cron2.yml kube-cron.yml
+else
+    cat /scripts/kube-cron-template.yml | envsubst > kube-cron.yml
+fi
 
 # Create deployment
 docker build -t us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1 .
@@ -59,7 +66,7 @@ then
   docker build -t us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME-workers:$CIRCLE_SHA1 .
   docker tag us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME-workers:$CIRCLE_SHA1 us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME-workers:$CIRCLE_SHA1
   gcloud docker -- push us.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME-workers}:$CIRCLE_SHA1
-  kubectl apply -f kube-cron-template.yml
+  kubectl apply -f kube-cron.yml
 fi
 
 # Apply deployment
