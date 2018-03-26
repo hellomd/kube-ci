@@ -63,7 +63,7 @@ gcloud docker -- push us.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}:
 
 if [ -e Dockerfile.cron ]
 then
-  docker build -t us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME-workers:$CIRCLE_SHA1 .
+  docker build -t us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME-workers:$CIRCLE_SHA1 -f Dockerfile.cron .
   docker tag us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME-workers:$CIRCLE_SHA1 us.gcr.io/${GOOGLE_PROJECT_ID}/$CIRCLE_PROJECT_REPONAME-workers:$CIRCLE_SHA1
   gcloud docker -- push us.gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}-workers:$CIRCLE_SHA1
   kubectl apply -f kube-cron.yml
