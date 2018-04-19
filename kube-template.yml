@@ -114,21 +114,6 @@ spec:
             secretKeyRef:
               name: shared-env
               key: elasticPass
-        - name: MYSQL_CONN_STRING
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: mysqlConnString
-        - name: MYSQL_USER
-          valueFrom:
-            secretKeyRef:
-              name: cloudsql-db-credentials
-              key: username
-        - name: MYSQL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: cloudsql-db-credentials
-              key: password
         - name: SENDGRID_API_KEY
           valueFrom:
             secretKeyRef:
@@ -139,3 +124,8 @@ spec:
             secretKeyRef:
               name: shared-env
               key: siteUrl
+        - name: GOOGLE_CLOUD_STORAGE_CREDENTIALS
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: googleCloudStorageCredentials
