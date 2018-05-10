@@ -129,3 +129,13 @@ spec:
             secretKeyRef:
               name: shared-env
               key: googleCloudStorageCredentials
+        - name: TWILIO_ACCOUNT_SID
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: twilioAccountSid
+        - name: TWILIO_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: twilioAuthToken
