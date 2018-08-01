@@ -149,6 +149,11 @@ spec:
             secretKeyRef:
               name: shared-env
               key: twilioNumber
+        - name: ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: encryptionKey
         - name: AUTHY_API_KEY
           valueFrom:
             secretKeyRef:
