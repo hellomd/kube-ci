@@ -184,4 +184,14 @@ spec:
             secretKeyRef:
               name: shared-env
               key: authorizeNetTkey
+        - name: METRILO_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: metriloToken
+        - name: METRILO_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: metriloSecret
               
