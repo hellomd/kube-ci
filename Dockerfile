@@ -9,6 +9,10 @@ RUN \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+# Install linkerd and update path
+RUN curl -sL https://run.linkerd.io/install | sh
+RUN export PATH=$PATH:$HOME/.linkerd2/bin
+
 RUN mkdir /scripts
 COPY kube-template.yml /scripts/kube-template.yml
 COPY kube-cron-template.yml /scripts/kube-cron-template.yml
