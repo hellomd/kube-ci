@@ -74,7 +74,7 @@ fi
 if [ "$ENV" = "development" ]
 then
     linkerd version
-    kubectl apply -f kube.yml
+    cat kube.yml | linkerd inject - | kubectl apply -f -
 else
     kubectl apply -f kube.yml
 fi
