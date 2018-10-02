@@ -20,6 +20,6 @@ jobs:
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               TAG="0.1.${CIRCLE_BUILD_NUM}"
-              docker login -u $DOCKERHUB_LOGIN -p $DOCKERHUB_PASS
+              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_LOGIN" --password-stdin
               docker push $IMAGE_NAME:$TAG
             fi

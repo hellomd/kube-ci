@@ -70,7 +70,7 @@ then
 fi
 
 # Apply deployment
-if [[ "$ENV" = "development" ]]
+if [ "$ENV" = "development" ]
 then
     linkerd version
     kubectl apply -f kube.yml
