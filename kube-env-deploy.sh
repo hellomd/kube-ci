@@ -71,7 +71,7 @@ then
 fi
 
 # Apply deployment with linkerd proxy, unless production env
-if [ "$ENV" = "development" ] || [ "$ENV" = "staging" ]
+if [ "$ENV" = "development" ]
 then
     linkerd version
     cat kube.yml | linkerd inject - | kubectl apply -f -
