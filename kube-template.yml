@@ -189,6 +189,16 @@ spec:
             secretKeyRef:
               name: shared-env
               key: authorizeNetTkey
+        - name: AUTHORIZENET_THC_ID
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: authorizeNetThcId
+        - name: AUTHORIZENET_THC_TKEY
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: authorizeNetThcTkey 
         - name: METRILO_TOKEN
           valueFrom:
             secretKeyRef:
