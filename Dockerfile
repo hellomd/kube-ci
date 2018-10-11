@@ -1,8 +1,11 @@
 FROM docker:17.06.1-ce as static-docker-source
-FROM node:10 as node
+FROM node:10.12 as node
 FROM google/cloud-sdk
 
-COPY --from=node /usr/local/bin/node /usr/local/bin/yarn /usr/local/bin/npm /usr/local/bin/
+RUN mkdir -p /opt
+
+COPY --from=node /opt/yarn-* /opt/
+COPY --from=node /usr/local/bin/node /usr/local/bin/npm /usr/local/bin/yarn /usr/local/bin/
 
 COPY --from=static-docker-source /usr/local/bin/docker /usr/local/bin/docker
 
