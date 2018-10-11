@@ -70,8 +70,8 @@ then
   kubectl apply -f kube-cron.yml
 fi
 
-# Apply deployment
-if [ "$ENV" = "development" ]
+# Apply deployment with linkerd proxy, unless production env
+if [ "$ENV" = "development-disabled" ]
 then
     linkerd version
     cat kube.yml | linkerd inject - | kubectl apply -f -
