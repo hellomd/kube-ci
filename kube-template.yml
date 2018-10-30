@@ -209,4 +209,14 @@ spec:
             secretKeyRef:
               name: shared-env
               key: metriloSecret
+        - name: ZOOMUS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: zoomusKey
+        - name: ZOOMUS_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: shared-env
+              key: zoomusSecret
               
