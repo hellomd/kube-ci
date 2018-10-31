@@ -11,6 +11,7 @@ RUN \
   && rm -rf /var/lib/apt/lists/*
 
 # Install linkerd and update path
+ENV LINKERD2_VERSION stable-2.0.0
 RUN curl -sL https://run.linkerd.io/install | sh
 ENV PATH="${PATH}:/root/.linkerd2/bin"
 
