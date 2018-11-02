@@ -11,7 +11,7 @@ RUN \
   && rm -rf /var/lib/apt/lists/*
 
 # Install linkerd and update path
-ENV LINKERD2_VERSION stable-2.0.0
+ENV LINKERD2_VERSION edge-18.11.1
 RUN curl -sL https://run.linkerd.io/install | sh
 ENV PATH="${PATH}:/root/.linkerd2/bin"
 
@@ -24,6 +24,8 @@ COPY --from=node /usr/local/bin/node /usr/local/bin/npm /usr/local/bin/
 COPY --from=static-docker-source /usr/local/bin/docker /usr/local/bin/docker
 
 RUN ln -s /opt/yarn-v$YARN_VERSION/bin/yarn /usr/local/bin/yarn
+
+RUN linkerd version
 
 RUN mkdir /scripts
 COPY kube-template.yml /scripts/kube-template.yml
