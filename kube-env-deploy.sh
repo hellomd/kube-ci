@@ -15,18 +15,24 @@ COMPUTE_ZONE=${GOOGLE_DEVELOPMENT_COMPUTE_ZONE}
 
 case "$ENV" in
 "production")
+  DEFAULT_KUBE_LIMIT_CPU="100m"
   CLUSTER=${GOOGLE_CLUSTER_NAME_PRODUCTION}
   COMPUTE_ZONE=${GOOGLE_COMPUTE_ZONE_PRODUCTION}
   ;;
 "staging")
+  DEFAULT_KUBE_LIMIT_CPU="40m"
   CLUSTER=${GOOGLE_CLUSTER_NAME_STAGING}
   COMPUTE_ZONE=${GOOGLE_COMPUTE_ZONE_STAGING}
   ;;
 "development")
+  DEFAULT_KUBE_LIMIT_CPU="40m"
   CLUSTER=${GOOGLE_CLUSTER_NAME_DEVELOPMENT}
   COMPUTE_ZONE=${GOOGLE_COMPUTE_ZONE_DEVELOPMENT}
   ;;
 esac
+
+# k8s limits
+KUBE_LIMIT_CPU="${KUBE_LIMIT_CPU:-$DEFAULT_KUBE_LIMIT_CPU}"
 
 echo "Deploying ${CIRCLE_PROJECT_REPONAME} $ENV to ${GOOGLE_PROJECT_ID}/$CLUSTER"
 echo "Chosen Cluster: $CLUSTER"
@@ -42,17 +48,25 @@ gcloud --quiet config set container/cluster $CLUSTER
 gcloud --quiet container clusters get-credentials $CLUSTER
 
 if [ -e kube.yml ]; then
-  cat kube.yml | envsubst > kube2.yml
+  cat kube.yml |\
+    KUBE_LIMIT_CPU=$KUBE_LIMIT_CPU \
+    envsubst > kube2.yml
   mv kube2.yml kube.yml
 else
-  cat /scripts/kube-template.yml | envsubst > kube.yml
+  cat /scripts/kube-template.yml |\
+    KUBE_LIMIT_CPU=$KUBE_LIMIT_CPU \
+    envsubst > kube.yml
 fi
 
 if [ -e kube-cron.yml ]; then
-  cat kube-cron.yml | envsubst > kube-cron2.yml
+  cat kube-cron.yml |\
+    KUBE_LIMIT_CPU=$KUBE_LIMIT_CPU \
+    envsubst > kube-cron2.yml
   mv kube-cron2.yml kube-cron.yml
 else
-  cat /scripts/kube-cron-template.yml | envsubst > kube-cron.yml
+  cat /scripts/kube-cron-template.yml |\
+    KUBE_LIMIT_CPU=$KUBE_LIMIT_CPU \
+    envsubst > kube-cron.yml
 fi
 
 # Create deployment

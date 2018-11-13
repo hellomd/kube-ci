@@ -17,97 +17,100 @@ spec:
         app: $CIRCLE_PROJECT_REPONAME-workers
     spec:
       containers:
-      - name: $CIRCLE_PROJECT_REPONAME-workers
-        image: us.gcr.io/hellomd-181719/$CIRCLE_PROJECT_REPONAME-workers:$CIRCLE_SHA1
-        imagePullPolicy: Always
-        env:
-        - name: AMQP_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: amqpUrl
-        - name: ENV
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: env
-        - name: GATEWAY_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: gatewayUrl
-        - name: LOGMATIC_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: logmaticApiKey
-        - name: MONGO_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: mongoUrl
-        - name: LEGACY_MONGO_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: legacyMongoUrl
-        - name: SECRET
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: secret
-        - name: SENTRY_DSN
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: sentryDsn
-        - name: AWS_ACCESS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: awsKey
-        - name: AWS_SECRET_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: awsSecret
-        - name: AWS_DEFAULT_REGION
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: awsRegion
-        - name: BLACKBIRD_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: blackbirdUrl
-        - name: EASYPOST_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: easypostUrl
-        - name: ELASTIC_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: elasticUrl
-        - name: ELASTIC_USER
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: elasticUser
-        - name: ELASTIC_PASS
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: elasticPass
-        - name: SENDGRID_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: sendgridApiKey
-        - name: SITE_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: siteUrl
+        - name: $CIRCLE_PROJECT_REPONAME-workers
+          image: us.gcr.io/hellomd-181719/$CIRCLE_PROJECT_REPONAME-workers:$CIRCLE_SHA1
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: $KUBE_LIMIT_CPU
+          env:
+            - name: AMQP_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: amqpUrl
+            - name: ENV
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: env
+            - name: GATEWAY_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: gatewayUrl
+            - name: LOGMATIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: logmaticApiKey
+            - name: MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: mongoUrl
+            - name: LEGACY_MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: legacyMongoUrl
+            - name: SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: secret
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: sentryDsn
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: awsKey
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: awsSecret
+            - name: AWS_DEFAULT_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: awsRegion
+            - name: BLACKBIRD_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: blackbirdUrl
+            - name: EASYPOST_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: easypostUrl
+            - name: ELASTIC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: elasticUrl
+            - name: ELASTIC_USER
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: elasticUser
+            - name: ELASTIC_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: elasticPass
+            - name: SENDGRID_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: sendgridApiKey
+            - name: SITE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: siteUrl

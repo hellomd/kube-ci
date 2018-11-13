@@ -8,8 +8,8 @@ metadata:
 spec:
   type: NodePort
   ports:
-  - port: 80
-    targetPort: 3000
+    - port: 80
+      targetPort: 3000
   selector:
     app: $CIRCLE_PROJECT_REPONAME
 ---
@@ -32,191 +32,193 @@ spec:
         app: $CIRCLE_PROJECT_REPONAME
     spec:
       containers:
-      - name: $CIRCLE_PROJECT_REPONAME
-        image: us.gcr.io/hellomd-181719/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 80
-        livenessProbe:
-          httpGet:
-            path: /healthcheck
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 30
-        env:
-        - name: AMQP_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: amqpUrl
-        - name: ENV
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: env
-        - name: GATEWAY_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: gatewayUrl
-        - name: LOGMATIC_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: logmaticApiKey
-        - name: MONGO_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: mongoUrl
-        - name: LEGACY_MONGO_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: legacyMongoUrl
-        - name: SECRET
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: secret
-        - name: SENTRY_DSN
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: sentryDsn
-        - name: AWS_ACCESS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: awsKey
-        - name: AWS_SECRET_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: awsSecret
-        - name: AWS_DEFAULT_REGION
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: awsRegion
-        - name: BLACKBIRD_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: blackbirdUrl
-        - name: EASYPOST_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: easypostUrl
-        - name: ELASTIC_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: elasticUrl
-        - name: ELASTIC_USER
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: elasticUser
-        - name: ELASTIC_PASS
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: elasticPass
-        - name: SENDGRID_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: sendgridApiKey
-        - name: SITE_URL
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: siteUrl
-        - name: GOOGLE_CLOUD_STORAGE_CREDENTIALS
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: googleCloudStorageCredentials
-        - name: TWILIO_ACCOUNT_SID
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: twilioAccountSid
-        - name: TWILIO_AUTH_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: twilioAuthToken
-        - name: TWILIO_NUMBER
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: twilioNumber
-        - name: ENCRYPTION_KEY
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: encryptionKey
-        - name: AUTHY_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: authyApiKey
-        - name: ICANPAY_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: iCanPaySecret
-        - name: ICANPAY_ID
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: iCanPayId
-        - name: ICANPAY_PW
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: iCanPayPw
-        - name: AUTHORIZENET_ID
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: authorizeNetId
-        - name: AUTHORIZENET_TKEY
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: authorizeNetTkey
-        - name: AUTHORIZENET_THC_ID
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: authorizeNetThcId
-        - name: AUTHORIZENET_THC_TKEY
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: authorizeNetThcTkey 
-        - name: METRILO_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: metriloToken
-        - name: METRILO_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: metriloSecret
-        - name: ZOOMUS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: zoomusKey
-        - name: ZOOMUS_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: shared-env
-              key: zoomusSecret
-              
+        - name: $CIRCLE_PROJECT_REPONAME
+          image: us.gcr.io/hellomd-181719/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          resources:
+            limits:
+              cpu: $KUBE_LIMIT_CPU
+          env:
+            - name: AMQP_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: amqpUrl
+            - name: ENV
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: env
+            - name: GATEWAY_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: gatewayUrl
+            - name: LOGMATIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: logmaticApiKey
+            - name: MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: mongoUrl
+            - name: LEGACY_MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: legacyMongoUrl
+            - name: SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: secret
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: sentryDsn
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: awsKey
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: awsSecret
+            - name: AWS_DEFAULT_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: awsRegion
+            - name: BLACKBIRD_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: blackbirdUrl
+            - name: EASYPOST_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: easypostUrl
+            - name: ELASTIC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: elasticUrl
+            - name: ELASTIC_USER
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: elasticUser
+            - name: ELASTIC_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: elasticPass
+            - name: SENDGRID_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: sendgridApiKey
+            - name: SITE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: siteUrl
+            - name: GOOGLE_CLOUD_STORAGE_CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: googleCloudStorageCredentials
+            - name: TWILIO_ACCOUNT_SID
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: twilioAccountSid
+            - name: TWILIO_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: twilioAuthToken
+            - name: TWILIO_NUMBER
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: twilioNumber
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: encryptionKey
+            - name: AUTHY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: authyApiKey
+            - name: ICANPAY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: iCanPaySecret
+            - name: ICANPAY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: iCanPayId
+            - name: ICANPAY_PW
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: iCanPayPw
+            - name: AUTHORIZENET_ID
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: authorizeNetId
+            - name: AUTHORIZENET_TKEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: authorizeNetTkey
+            - name: AUTHORIZENET_THC_ID
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: authorizeNetThcId
+            - name: AUTHORIZENET_THC_TKEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: authorizeNetThcTkey
+            - name: METRILO_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: metriloToken
+            - name: METRILO_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: metriloSecret
+            - name: ZOOMUS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: zoomusKey
+            - name: ZOOMUS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: zoomusSecret
