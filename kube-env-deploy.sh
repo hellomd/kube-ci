@@ -85,7 +85,7 @@ fi
 services_with_linkerd=('marketplace' 'users' 'authorization' 'memberships')
 if [[ "$ENV" = "development" && " ${services_with_linkerd[@]} " =~ " ${CIRCLE_PROJECT_REPONAME} " ]] || [[ "$ENV" = "staging" && " ${services_with_linkerd[@]} " =~ " ${CIRCLE_PROJECT_REPONAME} " ]]; then
   linkerd version
-  cat kube.yml | linkerd inject - | kubectl apply -f -
+  cat kube.yml | linkerd inject --proxy-log-level=linkerd2_proxy::control::destination::background::destination_set=trace,linkerd2_proxy::control::destination::background=trace - | kubectl apply -f -
 else
   kubectl apply -f kube.yml
 fi
