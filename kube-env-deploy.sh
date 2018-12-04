@@ -82,7 +82,8 @@ if [ -e Dockerfile.cron ]; then
 fi
 
 # Apply deployment with linkerd proxy, unless production env
-services_with_linkerd=('marketplace' 'users' 'authorization' 'memberships')
+#services_with_linkerd=('marketplace' 'users' 'authorization' 'memberships')
+services_with_linkerd=('none')
 if [[ "$ENV" = "development" && " ${services_with_linkerd[@]} " =~ " ${CIRCLE_PROJECT_REPONAME} " ]] || [[ "$ENV" = "staging" && " ${services_with_linkerd[@]} " =~ " ${CIRCLE_PROJECT_REPONAME} " ]]; then
   linkerd version
   cat kube.yml | linkerd inject --proxy-log-level=linkerd2_proxy::control::destination::background::destination_set=trace,linkerd2_proxy::control::destination::background=trace - | kubectl apply -f -
