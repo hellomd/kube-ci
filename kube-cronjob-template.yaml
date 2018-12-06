@@ -1,0 +1,72 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: job-$PROJECT_NAME-$JOB_NAME
+  namespace: default
+  labels:
+    app: $PROJECT_NAME
+spec:
+  # https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#schedule
+  schedule: "$JOB_SCHEDULE"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: runner
+              image: $JOB_IMAGE
+              args:
+                - $JOB_FILE
+              # @TODO Specify limits?
+              env:
+                # - name: ENABLE_STRUCTURED_LOGGING
+                #   value: "1"
+                - name: AMQP_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: amqpUrl
+                - name: NODE_ENV
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: env
+                - name: ENV
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: env
+                - name: GATEWAY_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: gatewayUrl
+                - name: LOGMATIC_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: logmaticApiKey
+                - name: MONGO_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: mongoUrl
+                - name: LEGACY_MONGO_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: legacyMongoUrl
+                - name: SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: secret
+                - name: SENTRY_DSN
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: sentryDsn

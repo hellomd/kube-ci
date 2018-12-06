@@ -1,39 +1,39 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: $CIRCLE_PROJECT_REPONAME
+  name: $PROJECT_NAME
   namespace: default
   labels:
-    app: $CIRCLE_PROJECT_REPONAME
+    app: $PROJECT_NAME
 spec:
   type: NodePort
   ports:
     - port: 80
       targetPort: 3000
   selector:
-    app: $CIRCLE_PROJECT_REPONAME
+    app: $PROJECT_NAME
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: $CIRCLE_PROJECT_REPONAME
+  name: $PROJECT_NAME
   namespace: default
   labels:
-    app: $CIRCLE_PROJECT_REPONAME
+    app: $PROJECT_NAME
 spec:
   replicas: 1
   revisionHistoryLimit: 5
   selector:
     matchLabels:
-      app: $CIRCLE_PROJECT_REPONAME
+      app: $PROJECT_NAME
   template:
     metadata:
       labels:
-        app: $CIRCLE_PROJECT_REPONAME
+        app: $PROJECT_NAME
     spec:
       containers:
-        - name: $CIRCLE_PROJECT_REPONAME
-          image: us.gcr.io/hellomd-181719/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1
+        - name: $PROJECT_NAME
+          image: $APP_IMAGE
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -47,11 +47,18 @@ spec:
             limits:
               cpu: $KUBE_LIMIT_CPU
           env:
+            # - name: ENABLE_STRUCTURED_LOGGING
+            #   value: "1"
             - name: AMQP_URL
               valueFrom:
                 secretKeyRef:
                   name: shared-env
                   key: amqpUrl
+            # - name: NODE_ENV
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: shared-env
+            #       key: env
             - name: ENV
               valueFrom:
                 secretKeyRef:

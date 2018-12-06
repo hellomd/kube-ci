@@ -26,6 +26,5 @@ COPY --from=static-docker-source /usr/local/bin/docker /usr/local/bin/docker
 RUN ln -s /opt/yarn-v$YARN_VERSION/bin/yarn /usr/local/bin/yarn
 
 RUN mkdir /scripts
-COPY kube-template.yml /scripts/kube-template.yml
-COPY kube-cron-template.yml /scripts/kube-cron-template.yml
-COPY kube-env-deploy.sh /scripts/kube-env-deploy.sh
+
+COPY kube-template.yml kube-cron-template.yml kube-cronjob-template.yaml kube-env-deploy.sh /scripts/

@@ -1,34 +1,41 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: $CIRCLE_PROJECT_REPONAME-workers
+  name: $PROJECT_NAME-workers
   namespace: default
   labels:
-    app: $CIRCLE_PROJECT_REPONAME-workers
+    app: $PROJECT_NAME-workers
 spec:
   replicas: 1
   revisionHistoryLimit: 5
   selector:
     matchLabels:
-      app: $CIRCLE_PROJECT_REPONAME-workers
+      app: $PROJECT_NAME-workers
   template:
     metadata:
       labels:
-        app: $CIRCLE_PROJECT_REPONAME-workers
+        app: $PROJECT_NAME-workers
     spec:
       containers:
-        - name: $CIRCLE_PROJECT_REPONAME-workers
-          image: us.gcr.io/hellomd-181719/$CIRCLE_PROJECT_REPONAME-workers:$CIRCLE_SHA1
+        - name: $PROJECT_NAME-workers
+          image: $WORKER_IMAGE
           imagePullPolicy: Always
           resources:
             limits:
               cpu: $KUBE_LIMIT_CPU
           env:
+            # - name: ENABLE_STRUCTURED_LOGGING
+            #   value: "1"
             - name: AMQP_URL
               valueFrom:
                 secretKeyRef:
                   name: shared-env
                   key: amqpUrl
+            # - name: NODE_ENV
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: shared-env
+            #       key: env
             - name: ENV
               valueFrom:
                 secretKeyRef:
