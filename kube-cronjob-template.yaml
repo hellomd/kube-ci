@@ -4,7 +4,7 @@ metadata:
   name: job-$PROJECT_NAME-$JOB_NAME
   namespace: default
   labels:
-    app: $PROJECT_NAME
+    parent-app: $PROJECT_NAME
 spec:
   # https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#schedule
   schedule: "$JOB_SCHEDULE"
@@ -13,8 +13,16 @@ spec:
   failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      metadata:
+        labels:
+          kind: cronjob-job
+          parent-app: $PROJECT_NAME
       template:
         spec:
+          metadata:
+            labels:
+              kind: cronjob-job
+              parent-app: $PROJECT_NAME
           restartPolicy: Never
           containers:
             - name: runner
