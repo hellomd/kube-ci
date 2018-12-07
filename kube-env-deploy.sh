@@ -320,7 +320,7 @@ create_job() {
   export JOB_SCHEDULE=$JOB_SCHEDULE
   export JOB_IMAGE=$JOB_IMAGE
   # @TODO Allow customization?
-  export JOB_FILE="${jobdir}/${jobname}.job.js"
+  export JOB_FILE="${jobdir}/index.js"
 
   envsubst_config_file $kubefile
   kubectl_apply $jobdir/out/
