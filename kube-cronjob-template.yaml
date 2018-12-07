@@ -25,6 +25,10 @@ spec:
               parent-app: $PROJECT_NAME
           restartPolicy: Never
           containers:
+            - name: PROJECT_NAME
+              value: $PROJECT_NAME
+            - name: COMMIT_SHA1
+              value: $COMMIT_SHA1
             - name: runner
               image: $JOB_IMAGE
               args:

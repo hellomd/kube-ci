@@ -24,6 +24,10 @@ spec:
             limits:
               cpu: $KUBE_LIMIT_CPU
           env:
+            - name: PROJECT_NAME
+              value: $PROJECT_NAME
+            - name: COMMIT_SHA1
+              value: $COMMIT_SHA1
             # - name: ENABLE_STRUCTURED_LOGGING
             #   value: "1"
             - name: AMQP_URL
