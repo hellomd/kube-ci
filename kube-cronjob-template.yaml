@@ -12,29 +12,29 @@ spec:
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
+    metadata:
+      labels:
+        kind: cronjob-job
+        parent-app: $PROJECT_NAME
     spec:
-      metadata:
-        labels:
-          kind: cronjob-job
-          parent-app: $PROJECT_NAME
       template:
+        metadata:
+          labels:
+            kind: cronjob-job
+            parent-app: $PROJECT_NAME
         spec:
-          metadata:
-            labels:
-              kind: cronjob-job
-              parent-app: $PROJECT_NAME
           restartPolicy: Never
           containers:
-            - name: PROJECT_NAME
-              value: $PROJECT_NAME
-            - name: COMMIT_SHA1
-              value: $COMMIT_SHA1
             - name: runner
               image: $JOB_IMAGE
               args:
                 - $JOB_FILE
               # @TODO Specify limits?
               env:
+                - name: PROJECT_NAME
+                  value: $PROJECT_NAME
+                - name: COMMIT_SHA1
+                  value: $COMMIT_SHA1
                 # - name: ENABLE_STRUCTURED_LOGGING
                 #   value: "1"
                 - name: AMQP_URL
