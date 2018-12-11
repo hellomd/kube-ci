@@ -26,6 +26,16 @@ PROJECT_NAME=${PROJECT_NAME:-$DEFAULT_PROJECT_NAME}
 # Get commit from CircleCI or git sha
 COMMIT_SHA1=${CIRCLE_SHA1:-$(git rev-parse HEAD)}
 
+# New infra with logging and apm on ELK stack
+services_with_new_infra=( 'playground' )
+ENABLE_APM="0"
+ENABLE_STRUCTURED_LOGGING="0"
+# Enable above if service is already configured for new infra
+if [[ "$ENV" = "development" && " ${services_with_new_infra[@]} " =~ " ${PROJECT_NAME} " ]] || [[ "$ENV" = "staging" && " ${services_with_new_infra[@]} " =~ " ${PROJECT_NAME} " ]]; then
+  ENABLE_APM="1"
+  ENABLE_STRUCTURED_LOGGING="1"
+fi
+
 if [[ ! $GOOGLE_PROJECT_ID ]]; then
   echo "Missing GOOGLE_PROJECT_ID env variable"
   exit 1
@@ -109,6 +119,8 @@ export COMMIT_SHA1=$COMMIT_SHA1
 export PROJECT_NAME=$PROJECT_NAME
 export APP_IMAGE=$APP_IMAGE
 export WORKER_IMAGE=$WORKER_IMAGE
+export ENABLE_APM=$ENABLE_APM
+export ENABLE_STRUCTURED_LOGGING=$ENABLE_STRUCTURED_LOGGING
 
 has_main_deployment=false
 has_worker_deployment=false
