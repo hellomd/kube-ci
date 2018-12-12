@@ -26,16 +26,6 @@ PROJECT_NAME=${PROJECT_NAME:-$DEFAULT_PROJECT_NAME}
 # Get commit from CircleCI or git sha
 COMMIT_SHA1=${CIRCLE_SHA1:-$(git rev-parse HEAD)}
 
-# New infra with logging and apm on ELK stack
-services_with_new_infra=( 'playground' 'authorization' )
-ENABLE_APM="0"
-ENABLE_STRUCTURED_LOGGING="0"
-# Enable above if service is already configured for new infra
-if [[ "$ENV" = "development" && " ${services_with_new_infra[@]} " =~ " ${PROJECT_NAME} " ]] || [[ "$ENV" = "staging" && " ${services_with_new_infra[@]} " =~ " ${PROJECT_NAME} " ]]; then
-  ENABLE_APM="1"
-  ENABLE_STRUCTURED_LOGGING="1"
-fi
-
 if [[ ! $GOOGLE_PROJECT_ID ]]; then
   echo "Missing GOOGLE_PROJECT_ID env variable"
   exit 1
@@ -94,8 +84,39 @@ if [[ $SKIP_SETUP != "1" && $CIRCLECI ]]; then
 
   # Allow to bail out if we are only setting up the environment 
   [[ $SETUP_ONLY == "1" ]] && exit 0
+  
+  CURRENT_CONTEXT=$(kubectl config current-context)
+  
 else
+
+  CURRENT_CONTEXT=$(kubectl config current-context)
+
+  # Running locally, get ENV based on current context, using development as default
+  ENV="development"
+
+  case "$CURRENT_CONTEXT" in
+  "gke_hellomd-181719_us-west1-a_cluster-production")
+      ENV="production"
+      ;;
+  "gke_hellomd-181719_us-west1-a_cluster-staging")
+      ENV="staging"
+      ;;
+  "gke_hellomd-181719_us-central1-a_cluster-development")
+      ENV="development"
+      ;;
+  esac
+
   echo "Preparing to deploy project ${PROJECT_NAME}"
+fi
+
+# New infra with logging and apm on ELK stack
+services_with_new_infra=( 'playground' 'authorization' )
+ENABLE_APM="0"
+ENABLE_STRUCTURED_LOGGING="0"
+# Enable above if service is already configured for new infra
+if [[ "$ENV" = "development" && " ${services_with_new_infra[@]} " =~ " ${PROJECT_NAME} " ]] || [[ "$ENV" = "staging" && " ${services_with_new_infra[@]} " =~ " ${PROJECT_NAME} " ]]; then
+  ENABLE_APM="1"
+  ENABLE_STRUCTURED_LOGGING="1"
 fi
 
 # k8s limits, this is here because it depends on defaults on CircleCI
