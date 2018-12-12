@@ -27,7 +27,7 @@ PROJECT_NAME=${PROJECT_NAME:-$DEFAULT_PROJECT_NAME}
 COMMIT_SHA1=${CIRCLE_SHA1:-$(git rev-parse HEAD)}
 
 # New infra with logging and apm on ELK stack
-services_with_new_infra=( 'playground' )
+services_with_new_infra=( 'playground' 'authorization' )
 ENABLE_APM="0"
 ENABLE_STRUCTURED_LOGGING="0"
 # Enable above if service is already configured for new infra
