@@ -18,6 +18,8 @@ spec:
         parent-app: $PROJECT_NAME
     spec:
       template:
+        annotations:
+          hellomd/logging.enabled: "1"
         metadata:
           labels:
             kind: cronjob-job
@@ -35,8 +37,9 @@ spec:
                   value: $PROJECT_NAME
                 - name: COMMIT_SHA1
                   value: $COMMIT_SHA1
-                # - name: ENABLE_STRUCTURED_LOGGING
-                #   value: "1"
+                - name: ENABLE_STRUCTURED_LOGGING
+                  value: "1"
+                # @TODO Should we enable APM on logs?
                 - name: AMQP_URL
                   valueFrom:
                     secretKeyRef:
