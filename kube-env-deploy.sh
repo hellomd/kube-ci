@@ -18,6 +18,9 @@ projectdir="${PROJECT_DIR:-$(readlink -f .)}"
 
 # Default kube limit for CPU
 DEFAULT_KUBE_LIMIT_CPU="40m"
+# Default logging level
+DEFAULT_LOGGING_LEVEL="info"
+LOGGING_LEVEL=${LOGGING_LEVEL:-$DEFAULT_LOGGING_LEVEL}
 
 # Project name
 DEFAULT_PROJECT_NAME=${CIRCLE_PROJECT_REPONAME:-$(basename $projectdir)}
@@ -136,6 +139,7 @@ WORKER_IMAGE=${WORKER_IMAGE_NAME}:${IMAGES_TAG}
 
 # export some vars so they are available for other scripts executed from this one, like envsubst
 export KUBE_LIMIT_CPU=$KUBE_LIMIT_CPU
+export LOGGING_LEVEL=$LOGGING_LEVEL
 export COMMIT_SHA1=$COMMIT_SHA1
 export PROJECT_NAME=$PROJECT_NAME
 export APP_IMAGE=$APP_IMAGE

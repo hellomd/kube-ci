@@ -73,6 +73,8 @@ spec:
               value: "${ENABLE_STRUCTURED_LOGGING}"
             - name: ENABLE_APM
               value: "${ENABLE_APM}"
+            - name: LOGGING_LEVEL
+              value: $LOGGING_LEVEL
             - name: APM_TOKEN
               valueFrom:
                 secretKeyRef:
