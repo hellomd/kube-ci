@@ -18,9 +18,9 @@ spec:
         parent-app: $PROJECT_NAME
     spec:
       template:
-        annotations:
-          hellomd/logging.enabled: "1"
         metadata:
+          annotations:
+            hellomd/logging.enabled: "1"
           labels:
             kind: cronjob-job
             parent-app: $PROJECT_NAME
