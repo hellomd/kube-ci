@@ -113,7 +113,7 @@ else
 fi
 
 # New infra with logging and apm on ELK stack
-services_with_new_infra=( 'playground' 'authorization' 'users' 'marketplace' )
+services_with_new_infra=( 'playground' 'authorization' 'users' 'marketplace' 'backend-for-frontend' )
 ENABLE_APM="0"
 ENABLE_STRUCTURED_LOGGING="0"
 # Enable above if service is already configured for new infra
