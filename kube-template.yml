@@ -75,7 +75,18 @@ spec:
               value: "${ENABLE_APM}"
             - name: LOGGING_LEVEL
               value: $LOGGING_LEVEL
-            - name: APM_TOKEN
+            # Elastic APM related
+            - name: ELASTIC_APM_SERVICE_NAME
+              value: $PROJECT_NAME
+            - name: ELASTIC_APM_SERVICE_VERSION
+              value: $COMMIT_SHA1
+            - name: ELASTIC_APM_TRANSACTION_SAMPLE_RATE
+              value: "0.3"
+            - name: ELASTIC_APM_CAPTURE_SPAN_STACK_TRACES
+              value: "false"
+            - name: ELASTIC_APM_API_REQUEST_TIME
+              value: "20s"
+            - name: ELASTIC_APM_SECRET_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: shared-env
