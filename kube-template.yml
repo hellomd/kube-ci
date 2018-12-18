@@ -71,11 +71,11 @@ spec:
               value: $COMMIT_SHA1
             - name: ENABLE_STRUCTURED_LOGGING
               value: "${ENABLE_STRUCTURED_LOGGING}"
-            - name: ENABLE_APM
-              value: "${ENABLE_APM}"
             - name: LOGGING_LEVEL
               value: $LOGGING_LEVEL
             # Elastic APM related
+            - name: ELASTIC_APM_ACTIVE
+              value: "${ELASTIC_APM_ACTIVE}"
             - name: ELASTIC_APM_SERVICE_NAME
               value: $PROJECT_NAME
             - name: ELASTIC_APM_SERVICE_VERSION
@@ -86,11 +86,6 @@ spec:
               value: "false"
             - name: ELASTIC_APM_API_REQUEST_TIME
               value: "20s"
-            - name: APM_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: shared-env
-                  key: apmToken
             - name: ELASTIC_APM_SECRET_TOKEN
               valueFrom:
                 secretKeyRef:

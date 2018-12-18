@@ -114,11 +114,11 @@ fi
 
 # New infra with logging and apm on ELK stack
 services_with_new_infra=( 'playground' 'authorization' 'users' 'marketplace' 'backend-for-frontend' )
-ENABLE_APM="0"
+ELASTIC_APM_ACTIVE="false"
 ENABLE_STRUCTURED_LOGGING="0"
 # Enable above if service is already configured for new infra
 if [[ "$ENV" = "development" && " ${services_with_new_infra[@]} " =~ " ${PROJECT_NAME} " ]] || [[ "$ENV" = "staging" && " ${services_with_new_infra[@]} " =~ " ${PROJECT_NAME} " ]]; then
-  ENABLE_APM="1"
+  ELASTIC_APM_ACTIVE="true"
   ENABLE_STRUCTURED_LOGGING="1"
 fi
 
@@ -144,7 +144,7 @@ export COMMIT_SHA1=$COMMIT_SHA1
 export PROJECT_NAME=$PROJECT_NAME
 export APP_IMAGE=$APP_IMAGE
 export WORKER_IMAGE=$WORKER_IMAGE
-export ENABLE_APM=$ENABLE_APM
+export ELASTIC_APM_ACTIVE=$ELASTIC_APM_ACTIVE
 export ENABLE_STRUCTURED_LOGGING=$ENABLE_STRUCTURED_LOGGING
 
 has_main_deployment=false
