@@ -35,6 +35,8 @@ spec:
               env:
                 - name: PROJECT_NAME
                   value: $PROJECT_NAME
+                - name: PROJECT_RESOURCE
+                  value: cronjob
                 - name: COMMIT_SHA1
                   value: $COMMIT_SHA1
                 - name: ENABLE_STRUCTURED_LOGGING
