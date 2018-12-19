@@ -115,11 +115,11 @@ fi
 # New infra with logging and apm on ELK stack
 services_with_new_infra=( 'playground' 'authorization' 'users' 'marketplace' 'backend-for-frontend' )
 ELASTIC_APM_ACTIVE="false"
-ENABLE_STRUCTURED_LOGGING="0"
+ENABLE_STRUCTURED_LOGGING="true"
 # Enable above if service is already configured for new infra
-if [[ "$ENV" = "development" && " ${services_with_new_infra[@]} " =~ " ${PROJECT_NAME} " ]] || [[ "$ENV" = "staging" && " ${services_with_new_infra[@]} " =~ " ${PROJECT_NAME} " ]]; then
+if [[ " ${services_with_new_infra[@]} " =~ " ${PROJECT_NAME} " ]]; then
   ELASTIC_APM_ACTIVE="true"
-  ENABLE_STRUCTURED_LOGGING="1"
+  ENABLE_STRUCTURED_LOGGING="true"
 fi
 
 # k8s limits, this is here because it depends on defaults on CircleCI
