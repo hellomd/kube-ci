@@ -34,6 +34,8 @@ spec:
               value: $COMMIT_SHA1
             - name: ENABLE_STRUCTURED_LOGGING
               value: "true"
+            - name: LOGGING_LEVEL
+              value: $LOGGING_LEVEL
             - name: AMQP_URL
               valueFrom:
                 secretKeyRef:

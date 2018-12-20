@@ -21,6 +21,9 @@ DEFAULT_KUBE_LIMIT_CPU="40m"
 # Default logging level
 DEFAULT_LOGGING_LEVEL="info"
 LOGGING_LEVEL=${LOGGING_LEVEL:-$DEFAULT_LOGGING_LEVEL}
+LOGGING_LEVEL_APP=${LOGGING_LEVEL_APP:-$LOGGING_LEVEL}
+LOGGING_LEVEL_WORKER=${LOGGING_LEVEL_WORKER:-$LOGGING_LEVEL}
+LOGGING_LEVEL_CRONJOB=${LOGGING_LEVEL_CRONJOB:-$LOGGING_LEVEL}
 
 # Project name
 DEFAULT_PROJECT_NAME=${CIRCLE_PROJECT_REPONAME:-$(basename $projectdir)}
@@ -139,7 +142,6 @@ WORKER_IMAGE=${WORKER_IMAGE_NAME}:${IMAGES_TAG}
 
 # export some vars so they are available for other scripts executed from this one, like envsubst
 export KUBE_LIMIT_CPU=$KUBE_LIMIT_CPU
-export LOGGING_LEVEL=$LOGGING_LEVEL
 export COMMIT_SHA1=$COMMIT_SHA1
 export PROJECT_NAME=$PROJECT_NAME
 export APP_IMAGE=$APP_IMAGE
@@ -261,6 +263,9 @@ if [[ $has_worker_deployment == true && ! -d "$kubedir" && ! -f "$kubefilecron" 
 fi
 
 if [[ -d "$kubedir" ]]; then
+
+  export LOGGING_LEVEL=$LOGGING_LEVEL
+
   # create out dir
   if [[ -d "$kubedir/out" ]]; then
     rm -rf "$kubedir/out"
@@ -282,8 +287,15 @@ else
   fi
   mkdir $projectdir/out
 
-  [[ -f "$projectdir/kube.yml" ]] && envsubst_config_file "$projectdir/kube.yml"
-  [[ -f "$projectdir/kube-cron.yml" ]] && envsubst_config_file "$projectdir/kube-cron.yml"
+  if [[ -f "$projectdir/kube.yml" ]]; then
+    export LOGGING_LEVEL=$LOGGING_LEVEL_APP
+    envsubst_config_file "$projectdir/kube.yml"
+  fi
+  
+  if [[ -f "$projectdir/kube-cron.yml" ]]; then
+    export LOGGING_LEVEL=$LOGGING_LEVEL_WORKER
+    envsubst_config_file "$projectdir/kube-cron.yml"
+  fi
 
   kubectl_apply $projectdir/out/
 fi
@@ -381,6 +393,7 @@ if [[ -d "./jobs" && ! -z "$(ls -A ./jobs)" ]]; then
   echo "Preparing cronjobs for project ${PROJECT_NAME}"
 
   CRONJOBS_DEFAULT_IMAGE=${APP_IMAGE:-"node:10-alpine"}
+  export LOGGING_LEVEL=$LOGGING_LEVEL_CRONJOB
 
   create_jobs_for_project ./jobs $CRONJOBS_DEFAULT_IMAGE
 else

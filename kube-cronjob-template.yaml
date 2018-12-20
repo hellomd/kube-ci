@@ -41,7 +41,9 @@ spec:
                   value: $COMMIT_SHA1
                 - name: ENABLE_STRUCTURED_LOGGING
                   value: "true"
-                # @TODO Should we enable APM on logs?
+                - name: LOGGING_LEVEL
+                  value: $LOGGING_LEVEL
+                # @TODO Should we enable APM on cronjobs?
                 - name: AMQP_URL
                   valueFrom:
                     secretKeyRef:
