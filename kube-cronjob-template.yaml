@@ -9,8 +9,11 @@ spec:
   # https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#schedule
   schedule: "$JOB_SCHEDULE"
   concurrencyPolicy: Forbid
-  successfulJobsHistoryLimit: 1
-  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  # If the job does not start this amount of seconds
+  #  after the time it should've ran, it will not run for this cycle.
+  startingDeadlineSeconds: 120
   jobTemplate:
     metadata:
       labels:
