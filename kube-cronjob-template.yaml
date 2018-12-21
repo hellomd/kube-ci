@@ -20,6 +20,7 @@ spec:
         kind: cronjob-job
         parent-app: $PROJECT_NAME
     spec:
+      backoffLimit: 0
       template:
         metadata:
           annotations:
