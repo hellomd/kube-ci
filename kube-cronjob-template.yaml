@@ -43,6 +43,8 @@ spec:
                   value: "true"
                 - name: LOGGING_LEVEL
                   value: $LOGGING_LEVEL
+                - name: JOB_NAME
+                  value: $JOB_NAME
                 # @TODO Should we enable APM on cronjobs?
                 - name: AMQP_URL
                   valueFrom:
