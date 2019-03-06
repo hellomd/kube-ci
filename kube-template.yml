@@ -82,6 +82,8 @@ spec:
               value: $PROJECT_NAME
             - name: ELASTIC_APM_SERVICE_VERSION
               value: $COMMIT_SHA1
+            - name: ELASTIC_APM_LOG_LEVEL
+              value: $LOGGING_LEVEL_APM
             - name: ELASTIC_APM_TRANSACTION_SAMPLE_RATE
               value: "0.3"
             - name: ELASTIC_APM_CAPTURE_SPAN_STACK_TRACES
