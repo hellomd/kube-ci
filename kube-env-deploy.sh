@@ -13,6 +13,11 @@ debug=
 # Initial Variables Setup
 ###
 
+if [[ ! $GOOGLE_PROJECT_ID ]]; then
+  echo "Missing GOOGLE_PROJECT_ID env variable"
+  exit 1
+fi
+
 currentdir="$(dirname "$(readlink -f "$0")")"
 projectdir="${PROJECT_DIR:-$(readlink -f .)}"
 
@@ -34,11 +39,6 @@ PROJECT_NAME=${PROJECT_NAME:-$DEFAULT_PROJECT_NAME}
 
 # Get commit from CircleCI or git sha
 COMMIT_SHA1=${CIRCLE_SHA1:-$(git rev-parse HEAD)}
-
-if [[ ! $GOOGLE_PROJECT_ID ]]; then
-  echo "Missing GOOGLE_PROJECT_ID env variable"
-  exit 1
-fi
 
 # We only want to run login stuff if running on CIRCLECI
 if [[ $SKIP_SETUP != "1" && $CIRCLECI ]]; then
@@ -149,10 +149,11 @@ export COMMIT_SHA1=$COMMIT_SHA1
 export PROJECT_NAME=$PROJECT_NAME
 export APP_IMAGE=$APP_IMAGE
 export WORKER_IMAGE=$WORKER_IMAGE
-export ELASTIC_APM_ACTIVE=$ELASTIC_APM_ACTIVE
-export ENABLE_STRUCTURED_LOGGING=$ENABLE_STRUCTURED_LOGGING
 
+export ENABLE_STRUCTURED_LOGGING=$ENABLE_STRUCTURED_LOGGING
 export LOGGING_LEVEL_APM=$LOGGING_LEVEL_APM
+
+export ELASTIC_APM_ACTIVE=$ELASTIC_APM_ACTIVE
 
 has_main_deployment=false
 has_worker_deployment=false

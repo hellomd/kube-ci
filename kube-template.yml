@@ -205,6 +205,11 @@ spec:
                 secretKeyRef:
                   name: shared-env
                   key: siteUrl
+            - name: GMAPS_GEOCODING_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: gmapsGeocodingApiKey
             - name: GOOGLE_CLOUD_STORAGE_CREDENTIALS
               valueFrom:
                 secretKeyRef:
