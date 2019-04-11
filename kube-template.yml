@@ -50,10 +50,10 @@ spec:
             httpGet:
               path: /healthcheck
               port: 3000
-            initialDelaySeconds: 20
+            initialDelaySeconds: 5
             timeoutSeconds: 1
-            periodSeconds: 15
-            failureThreshold: 8
+            periodSeconds: 8
+            failureThreshold: 20
           livenessProbe:
             httpGet:
               path: /healthcheck
