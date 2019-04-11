@@ -265,6 +265,7 @@ spec:
                 secretKeyRef:
                   name: shared-env
                   key: iCanPayPw
+            # AuthNet
             - name: AUTHORIZENET_ID
               valueFrom:
                 secretKeyRef:
@@ -285,6 +286,22 @@ spec:
                 secretKeyRef:
                   name: shared-env
                   key: authorizeNetThcTkey
+            # PaySafe
+            - name: PAYSAFE_ACCOUNT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: paySafeAccountId
+            - name: PAYSAFE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: paySafeUsername
+            - name: PAYSAFE_APIKEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: paySafeApiKey
             - name: METRILO_TOKEN
               valueFrom:
                 secretKeyRef:
