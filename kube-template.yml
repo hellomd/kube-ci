@@ -322,3 +322,8 @@ spec:
                 secretKeyRef:
                   name: shared-env
                   key: zoomusSecret
+            - name: INTERCOM_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: intercomApiSecret
