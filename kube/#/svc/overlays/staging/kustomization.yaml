@@ -1,0 +1,8 @@
+bases:
+  - ../../base
+
+commonLabels:
+  app-variant: staging
+
+patches:
+  - pod-cpu-limit.yaml

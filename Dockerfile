@@ -39,3 +39,8 @@ RUN go get sigs.k8s.io/kustomize
 
 # Legacy scripts
 COPY legacy/ /scripts/
+
+# New deploy stuff
+WORKDIR /kube-ci
+
+COPY scripts/ scripts 
