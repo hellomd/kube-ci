@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $PROJECT_NAME
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      annotations:
+        hellomd/logging.enabled: "true"
+    spec:
+      containers:
+        - name: main
+          image: $APP_IMAGE
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          # This is used when a new replica is created
+          # Requests are only going to be forwarded to this probe after this amount of time
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 3000
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 8
+            failureThreshold: 20
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 3000
+            initialDelaySeconds: 50
+            timeoutSeconds: 1
+            periodSeconds: 30
+          env:
+            - name: PROJECT_NAME
+              value: $PROJECT_NAME
+            - name: PROJECT_RESOURCE
+              value: app
+            - name: COMMIT_SHA1
+              value: $COMMIT_SHA1
+            - name: ENABLE_STRUCTURED_LOGGING
+              value: "true"
+            - name: LOGGING_LEVEL
+              value: "info"
+            # Elastic APM related
+            - name: ELASTIC_APM_ACTIVE
+              value: "true"
+            - name: ELASTIC_APM_SERVICE_NAME
+              value: $PROJECT_NAME
+            - name: ELASTIC_APM_SERVICE_VERSION
+              value: $COMMIT_SHA1
+            - name: ELASTIC_APM_LOG_LEVEL
+              value: "error"
+            - name: ELASTIC_APM_TRANSACTION_SAMPLE_RATE
+              value: "0.3"
+            - name: ELASTIC_APM_CAPTURE_SPAN_STACK_TRACES
+              value: "false"
+            - name: ELASTIC_APM_API_REQUEST_TIME
+              value: "20s"
+            - name: ELASTIC_APM_SECRET_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: apmToken
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: sentryDsn
+            - name: NODE_ENV
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: env
+            - name: ENV
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: env
+            - name: GATEWAY_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: gatewayUrl
+            - name: SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: secret
+            - name: AMQP_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: amqpUrl
+            - name: MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: mongoUrl

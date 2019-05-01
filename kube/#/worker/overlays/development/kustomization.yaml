@@ -1,0 +1,8 @@
+bases:
+  - ../../base
+
+commonLabels:
+  worker-variant: development
+
+patches:
+  - pod-cpu-limit.yaml

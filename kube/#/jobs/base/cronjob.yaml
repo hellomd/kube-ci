@@ -1,0 +1,77 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: job-$PROJECT_NAME-$JOB_NAME
+spec:
+  # https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/#schedule
+  schedule: '$JOB_SCHEDULE'
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  # If the job does not start this amount of seconds
+  #  after the time it should've ran, it will not run for this cycle.
+  startingDeadlineSeconds: 120
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          annotations:
+            hellomd/logging.enabled: "true"
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: main
+              image: $IMAGE
+              args:
+                - $JOB_FILE
+              # @TODO Specify limits?
+              env:
+                - name: PROJECT_NAME
+                  value: $PROJECT_NAME
+                - name: PROJECT_RESOURCE
+                  value: cronjob
+                - name: COMMIT_SHA1
+                  value: $COMMIT_SHA1
+                - name: ENABLE_STRUCTURED_LOGGING
+                  value: "true"
+                - name: LOGGING_LEVEL
+                  value: "info"
+                - name: JOB_NAME
+                  value: $JOB_NAME
+                # @TODO Should we enable APM on cronjobs?
+                - name: SENTRY_DSN
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: sentryDsn
+                - name: NODE_ENV
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: env
+                - name: ENV
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: env
+                - name: SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: secret
+                - name: GATEWAY_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: gatewayUrl
+                - name: AMQP_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: amqpUrl
+                - name: MONGO_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: mongoUrl
