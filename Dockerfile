@@ -1,5 +1,6 @@
 FROM docker:17.06.1-ce as static-docker-source
-FROM node:10.12 as node
+FROM node:10.15.3 as node
+FROM golang:1.12.4-stretch as go
 FROM google/cloud-sdk
 
 RUN mkdir -p /opt
@@ -11,20 +12,30 @@ RUN \
   && rm -rf /var/lib/apt/lists/*
 
 # Install linkerd and update path
-ENV LINKERD2_VERSION edge-18.11.1
+ENV LINKERD2_VERSION stable-2.3.0
 RUN curl -sL https://run.linkerd.io/install | sh
 ENV PATH="${PATH}:/root/.linkerd2/bin"
 
-# Must match same at https://github.com/nodejs/docker-node/blob/master/10/stretch/Dockerfile#L44
-ENV YARN_VERSION 1.10.1
+# Docker
+COPY --from=static-docker-source /usr/local/bin/docker /usr/local/bin/docker
+
+# Node.js
+## Must match same at https://github.com/nodejs/docker-node/blob/master/10/stretch/Dockerfile#L44
+ENV YARN_VERSION 1.13.0
 
 COPY --from=node /opt/yarn-v$YARN_VERSION /opt/yarn-v$YARN_VERSION
 COPY --from=node /usr/local/bin/node /usr/local/bin/npm /usr/local/bin/
-
-COPY --from=static-docker-source /usr/local/bin/docker /usr/local/bin/docker
-
 RUN ln -s /opt/yarn-v$YARN_VERSION/bin/yarn /usr/local/bin/yarn
 
-RUN mkdir /scripts
+# Go
+COPY --from=go /usr/local/go /usr/local/go
+ENV GOPATH /go
+ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
-COPY kube-template.yml kube-cron-template.yml kube-cronjob-template.yaml kube-env-deploy.sh /scripts/
+RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
+
+# Kustomize
+RUN go get sigs.k8s.io/kustomize
+
+# Legacy scripts
+COPY legacy/ /scripts/
