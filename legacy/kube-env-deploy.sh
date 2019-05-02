@@ -42,7 +42,7 @@ COMMIT_SHA1=${CIRCLE_SHA1:-$(git rev-parse HEAD)}
 
 # We only want to run login stuff if running on CIRCLECI
 if [[ $SKIP_SETUP != "1" && $CIRCLECI ]]; then
-  if [[ "$1" ]]; then
+  if [[ -z $1 ]]; then
     echo "No environment argument given, assuming development"
   fi
 

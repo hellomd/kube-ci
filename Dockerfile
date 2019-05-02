@@ -41,6 +41,7 @@ RUN go get sigs.k8s.io/kustomize
 COPY legacy/ /scripts/
 
 # New deploy stuff
-WORKDIR /kube-ci
+# This will break older deployments
+# WORKDIR /kube-ci
 
-COPY scripts/ scripts 
+COPY scripts/ /kube-ci/scripts
