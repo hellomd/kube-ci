@@ -44,4 +44,5 @@ COPY legacy/ /scripts/
 # This will break older deployments
 # WORKDIR /kube-ci
 
+COPY kube/ /kube-ci/kube
 COPY scripts/ /kube-ci/scripts
