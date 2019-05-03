@@ -13,8 +13,9 @@ function debug_cmd() {
 # Initial setup
 ################
 usage() {
-  echo "Usage: $0 [-e <production|staging|development>] [-n <project-name>] [-d enable debug or not]" 1>&2
-  echo "                                                                   " 1>&2
+  echo "Usage: $0 [-e <production|staging|development>] [-n <project-name>] [-r <region>] [-d enable debug or not]" 1>&2
+  echo "" 1>&2
+  echo "-r defaults to \$CLUSTER_REGION_ID, if that is not set, it will default to our main one, hmd" 1>&2
   echo "-n defaults to \$CIRCLE_PROJECT_REPONAME, if that is not set, to the basename of the current directory" 1>&2
   echo "-e defaults to development" 1>&2
   exit 1
@@ -31,7 +32,7 @@ projectdir="${PROJECT_DIR:-$(readlink -f .)}"
 
 ENV=development
 # cluster identifier
-CLUSTER_ID=${CLUSTER_ID:-hmd}
+CLUSTER_REGION_ID=${CLUSTER_REGION_ID:-hmd}
 # Project name is the repo name on GitHub or the current folder name if deploying locally
 PROJECT_NAME=${CIRCLE_PROJECT_REPONAME:-$(basename $projectdir)}
 # Get commit from CircleCI or git sha
@@ -42,7 +43,7 @@ IS_CI=${CIRCLECI:-}
 # Docker stuff
 IMAGES_TAG=${IMAGES_TAG:-$COMMIT_SHA1}
 
-while getopts ":e:n:d" name; do
+while getopts ":e:n:r:d" name; do
   case "${name}" in
   e)
     ENV=${OPTARG}
@@ -53,6 +54,9 @@ while getopts ":e:n:d" name; do
   n)
     PROJECT_NAME=${OPTARG}
     ;;
+  r)
+    CLUSTER_REGION_ID=${OPTARG}
+    ;;
   d)
     debug=debug_cmd
     ;;
@@ -62,6 +66,11 @@ while getopts ":e:n:d" name; do
   esac
 done
 shift $((OPTIND - 1))
+
+# Cluster region is a string
+CLUSTER_REGION_ID=$(printf '%s\n' "$CLUSTER_REGION_ID" | awk '{ print toupper($0) }' | sed "s/\./_/g")
+
+echo "Cluster Region: $CLUSTER_REGION_ID"
 
 echo "currentdir: " $currentdir
 echo "kuberootdir: " $kuberootdir
@@ -78,6 +87,8 @@ fi
 echo ""
 echo ""
 
+exit 0
+
 ################
 # CI Setup
 ################
@@ -85,11 +96,29 @@ echo ""
 if [[ ! -z "$IS_CI" ]]; then
 
   missing_required_env=false
+
+  # Those are really long name are not it?
+  CLUSTER_REGION_AUTH_VAR="${CLUSTER_REGION_ID}_GOOGLE_AUTH"
+  CLUSTER_REGION_PROJECT_ID_VAR="${CLUSTER_REGION_ID}_GOOGLE_PROJECT_ID"
+  CLUSTER_REGION_CLUSTER_NAME_VAR="${CLUSTER_REGION_ID}_GOOGLE_DEVELOPMENT_CLUSTER_NAME"
+  CLUSTER_REGION_COMPUTE_ZONE_VAR="${CLUSTER_REGION_ID}_GOOGLE_DEVELOPMENT_COMPUTE_ZONE"
+
+  CLUSTER_REGION_CLUSTER_NAME_VAR_PRODUCTION="${CLUSTER_REGION_CLUSTER_NAME_VAR}_PRODUCTION"
+  CLUSTER_REGION_COMPUTE_ZONE_VAR_PRODUCTION="${CLUSTER_REGION_COMPUTE_ZONE_VAR}_PRODUCTION"
+  CLUSTER_REGION_CLUSTER_NAME_VAR_STAGING="${CLUSTER_REGION_CLUSTER_NAME_VAR}_STAGING"
+  CLUSTER_REGION_COMPUTE_ZONE_VAR_STAGING="${CLUSTER_REGION_COMPUTE_ZONE_VAR}_STAGING"
+  CLUSTER_REGION_CLUSTER_NAME_VAR_DEVELOPMENT="${CLUSTER_REGION_CLUSTER_NAME_VAR}_DEVELOPMENT"
+  CLUSTER_REGION_COMPUTE_ZONE_VAR_DEVELOPMENT="${CLUSTER_REGION_COMPUTE_ZONE_VAR}_DEVELOPMENT"
+
   for required_env in \
-    GOOGLE_AUTH \
-    GOOGLE_PROJECT_ID \
-    GOOGLE_DEVELOPMENT_CLUSTER_NAME \
-    GOOGLE_DEVELOPMENT_COMPUTE_ZONE; do
+    $CLUSTER_REGION_AUTH_VAR \
+    $CLUSTER_REGION_PROJECT_ID_VAR \
+    $CLUSTER_REGION_CLUSTER_NAME_VAR_PRODUCTION \
+    $CLUSTER_REGION_COMPUTE_ZONE_VAR_PRODUCTION \
+    $CLUSTER_REGION_CLUSTER_NAME_VAR_STAGING \
+    $CLUSTER_REGION_COMPUTE_ZONE_VAR_STAGING \
+    $CLUSTER_REGION_CLUSTER_NAME_VAR_DEVELOPMENT \
+    $CLUSTER_REGION_COMPUTE_ZONE_VAR_DEVELOPMENT; do
     if [ -z "${!required_env}" ]; then
       missing_required_env=true
       echo "$required_env is not set" 1>&2
@@ -98,22 +127,27 @@ if [[ ! -z "$IS_CI" ]]; then
 
   [[ $missing_required_env == "true" ]] && echo "Missing required environment variables, cannot continue" 1>&2 && exit 1
 
-  # Define deployment variables considering environment
-  CLUSTER=${GOOGLE_DEVELOPMENT_CLUSTER_NAME}
-  COMPUTE_ZONE=${GOOGLE_DEVELOPMENT_COMPUTE_ZONE}
+  GOOGLE_AUTH="${!CLUSTER_REGION_AUTH_VAR}"
+  GOOGLE_PROJECT_ID="${!CLUSTER_REGION_PROJECT_ID_VAR}"
+  GOOGLE_CLUSTER_NAME_PRODUCTION="${!CLUSTER_REGION_CLUSTER_NAME_VAR_PRODUCTION}"
+  GOOGLE_COMPUTE_ZONE_PRODUCTION="${!CLUSTER_REGION_COMPUTE_ZONE_VAR_PRODUCTION}"
+  GOOGLE_CLUSTER_NAME_STAGING="${!CLUSTER_REGION_CLUSTER_NAME_VAR_STAGING}"
+  GOOGLE_COMPUTE_ZONE_STAGING="${!CLUSTER_REGION_COMPUTE_ZONE_VAR_STAGING}"
+  GOOGLE_CLUSTER_NAME_DEVELOPMENT="${!CLUSTER_REGION_CLUSTER_NAME_VAR_DEVELOPMENT}"
+  GOOGLE_COMPUTE_ZONE_DEVELOPMENT="${!CLUSTER_REGION_COMPUTE_ZONE_VAR_DEVELOPMENT}"
 
   case "$ENV" in
   "production")
-    CLUSTER=${GOOGLE_CLUSTER_NAME_PRODUCTION:-CLUSTER}
-    COMPUTE_ZONE=${GOOGLE_COMPUTE_ZONE_PRODUCTION:-COMPUTE_ZONE}
+    CLUSTER=$GOOGLE_CLUSTER_NAME_PRODUCTION
+    COMPUTE_ZONE=$GOOGLE_COMPUTE_ZONE_PRODUCTION
     ;;
   "staging")
-    CLUSTER=${GOOGLE_CLUSTER_NAME_STAGING:-CLUSTER}
-    COMPUTE_ZONE=${GOOGLE_COMPUTE_ZONE_STAGING:-COMPUTE_ZONE}
+    CLUSTER=$GOOGLE_CLUSTER_NAME_STAGING
+    COMPUTE_ZONE=$GOOGLE_COMPUTE_ZONE_STAGING
     ;;
   "development")
-    CLUSTER=${GOOGLE_CLUSTER_NAME_DEVELOPMENT:-CLUSTER}
-    COMPUTE_ZONE=${GOOGLE_COMPUTE_ZONE_DEVELOPMENT:-COMPUTE_ZONE}
+    CLUSTER=$GOOGLE_CLUSTER_NAME_DEVELOPMENT
+    COMPUTE_ZONE=$GOOGLE_COMPUTE_ZONE_DEVELOPMENT
     ;;
   esac
 
@@ -133,7 +167,7 @@ if [[ ! -z "$IS_CI" ]]; then
   echo "Deploying [$PROJECT_NAME] from CircleCI to [$ENV] on [$CURRENT_CONTEXT]"
 else
   # Running locally, so we expect this to be correct
-  GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_IDS:-$(gcloud config list --format 'value(core.project)' 2>/dev/null)}
+  GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-$(gcloud config list --format 'value(core.project)' 2>/dev/null)}
   CURRENT_CONTEXT=$(kubectl config current-context)
   echo "Deploying [$PROJECT_NAME] locally to [$ENV] on [$CURRENT_CONTEXT]"
 fi
@@ -215,8 +249,8 @@ cp -rf $projectdir/kube $projectdir/kube.out
 ################
 main_kustomization_file="$projectdir/kube.out/#/main/base/kustomization.yaml"
 main_env_kustomization_file="$projectdir/kube.out/#/main/overlays/$ENV/kustomization.yaml"
-main_cluster_kustomization_file=$projectdir/kube.out/$CLUSTER_ID/main/base/kustomization.yaml
-main_cluster_env_kustomization_file=$projectdir/kube.out/$CLUSTER_ID/main/overlays/$ENV/kustomization.yaml
+main_cluster_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID/main/base/kustomization.yaml
+main_cluster_env_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID/main/overlays/$ENV/kustomization.yaml
 main_possible_kustomization_files=(
   "$main_cluster_env_kustomization_file"
   "$main_cluster_kustomization_file"
@@ -255,8 +289,8 @@ fi
 ################
 worker_kustomization_file="$projectdir/kube.out/#/worker/base/kustomization.yaml"
 worker_env_kustomization_file="$projectdir/kube.out/#/worker/overlays/$ENV/kustomization.yaml"
-worker_cluster_kustomization_file=$projectdir/kube.out/$CLUSTER_ID/worker/base/kustomization.yaml
-worker_cluster_env_kustomization_file=$projectdir/kube.out/$CLUSTER_ID/worker/overlays/$ENV/kustomization.yaml
+worker_cluster_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID/worker/base/kustomization.yaml
+worker_cluster_env_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID/worker/overlays/$ENV/kustomization.yaml
 worker_possible_kustomization_files=(
   "$worker_cluster_env_kustomization_file"
   "$worker_cluster_kustomization_file"
@@ -295,8 +329,8 @@ fi
 ################
 jobs_kustomization_file="$projectdir/kube.out/#/jobs/base/kustomization.yaml"
 jobs_env_kustomization_file="$projectdir/kube.out/#/jobs/overlays/$ENV/kustomization.yaml"
-jobs_cluster_kustomization_file=$projectdir/kube.out/$CLUSTER_ID/jobs/base/kustomization.yaml
-jobs_cluster_env_kustomization_file=$projectdir/kube.out/$CLUSTER_ID/jobs/overlays/$ENV/kustomization.yaml
+jobs_cluster_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID/jobs/base/kustomization.yaml
+jobs_cluster_env_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID/jobs/overlays/$ENV/kustomization.yaml
 jobs_possible_kustomization_files=(
   "$jobs_cluster_env_kustomization_file"
   "$jobs_cluster_kustomization_file"
@@ -411,20 +445,20 @@ cp -rf $kuberootdir/kube $kuberootdir/kube.out
 mkdir -p $kuberootdir/kube.out/manifests/
 
 kustomize_default_svc_folders=(
-  "$kuberootdir/kube.out/$CLUSTER_ID/svc/overlays/$ENV/"
-  "$kuberootdir/kube.out/$CLUSTER_ID/svc/base/"
+  "$kuberootdir/kube.out/$CLUSTER_REGION_ID/svc/overlays/$ENV/"
+  "$kuberootdir/kube.out/$CLUSTER_REGION_ID/svc/base/"
   "$kuberootdir/kube.out/#/svc/overlays/$ENV/"
   "$kuberootdir/kube.out/#/svc/base/"
 )
 kustomize_default_jobs_folders=(
-  "$kuberootdir/kube.out/$CLUSTER_ID/jobs/overlays/$ENV/"
-  "$kuberootdir/kube.out/$CLUSTER_ID/jobs/base/"
+  "$kuberootdir/kube.out/$CLUSTER_REGION_ID/jobs/overlays/$ENV/"
+  "$kuberootdir/kube.out/$CLUSTER_REGION_ID/jobs/base/"
   "$kuberootdir/kube.out/#/jobs/overlays/$ENV/"
   "$kuberootdir/kube.out/#/jobs/base/"
 )
 kustomize_default_worker_folders=(
-  "$kuberootdir/kube.out/$CLUSTER_ID/worker/overlays/$ENV/"
-  "$kuberootdir/kube.out/$CLUSTER_ID/worker/base/"
+  "$kuberootdir/kube.out/$CLUSTER_REGION_ID/worker/overlays/$ENV/"
+  "$kuberootdir/kube.out/$CLUSTER_REGION_ID/worker/base/"
   "$kuberootdir/kube.out/#/worker/overlays/$ENV/"
   "$kuberootdir/kube.out/#/worker/base/"
 )
@@ -469,7 +503,7 @@ echo ""
 
 # Export required vars for subshells
 export ENV=$ENV
-export CLUSTER_ID=$CLUSTER_ID
+export CLUSTER_REGION_ID=$CLUSTER_REGION_ID
 export COMMIT_SHA1=$COMMIT_SHA1
 export PROJECT_NAME=$PROJECT_NAME
 export IMAGES_TAG=$IMAGES_TAG
@@ -516,7 +550,7 @@ for filename in $projectdir/kube.out/**/*/kustomization.yaml; do
 
   # env vars to subst follow below
   $currentdir/replace-envs-on-file.sh -f $filename -o \
-    '$ENV $CLUSTER_ID $K8S_KUSTOMIZATION_SVC_BASE $K8S_KUSTOMIZATION_JOBS_BASE $K8S_KUSTOMIZATION_WORKER_BASE'
+    '$ENV $CLUSTER_REGION_ID $K8S_KUSTOMIZATION_SVC_BASE $K8S_KUSTOMIZATION_JOBS_BASE $K8S_KUSTOMIZATION_WORKER_BASE'
 
   echo "Using Base Kustomize main folder: $K8S_KUSTOMIZATION_SVC_BASE ($KUSTOMIZE_DEFAULT_SVC_FOLDER)"
   echo "Using Base Kustomize jobs folder: $K8S_KUSTOMIZATION_JOBS_BASE ($KUSTOMIZE_DEFAULT_JOBS_FOLDER)"
