@@ -3,7 +3,8 @@ kind: Kustomization
 namespace: default
 
 commonLabels:
-  hellomd/kind: microservice
+  # commented to not cause the error: he Deployment "..." is invalid: spec.selector: Invalid value: ... field is immutable
+  # hellomd/kind: microservice
   app: $PROJECT_NAME
 
 resources:

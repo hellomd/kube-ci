@@ -2,7 +2,7 @@ bases:
   - ../../base
 
 commonLabels:
-  app-variant: production
+  # app-variant: production
 
 patches:
   - pod-cpu-limit.yaml
