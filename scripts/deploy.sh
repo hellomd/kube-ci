@@ -47,10 +47,17 @@ shift $((OPTIND - 1))
 IFS=', ' read -r -a cluster_regions <<< "$CLUSTER_REGION_ID"
 
 for region in "${cluster_regions[@]}"; do
-  echo " - - - - - - - - - - - - - - - - - - - - - - "
+  echo "################################################################"
+  printf "# DEPLOYING TO ${ENV^^} on %-32s #\n" ${region^^}
+  echo "################################################################"
+  echo ""
   echo "Running: $currentdir/kube-env-deploy.sh -e $ENV -r $region" "${child_args[@]}"
-  $currentdir/kube-env-deploy.sh -e $ENV -r $region "${child_args[@]}"
   echo " - - - - - - - - - - - - - - - - - - - - - - "
+  $currentdir/kube-env-deploy.sh -e $ENV -r $region "${child_args[@]}"
+  echo ""
+  echo " - - - - - - - - - - - - - - - - - - - - - - "
+  echo ""
+  echo ""
   echo ""
   echo ""
 
