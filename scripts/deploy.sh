@@ -53,4 +53,9 @@ for region in "${cluster_regions[@]}"; do
   echo " - - - - - - - - - - - - - - - - - - - - - - "
   echo ""
   echo ""
+
+  # We want to reuse the images built on the first deploy
+  export OVERWRITE_APP_IMAGE=${OVERWRITE_APP_IMAGE:-"false"}
+  export OVERWRITE_WORKER_IMAGE=${OVERWRITE_WORKER_IMAGE:-"false"}
+  export OVERWRITE_JOBS_IMAGES=${OVERWRITE_JOBS_IMAGES:-"false"}
 done

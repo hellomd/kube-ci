@@ -70,23 +70,6 @@ shift $((OPTIND - 1))
 # Cluster region is a string
 CLUSTER_REGION_ID=$(printf '%s\n' "$CLUSTER_REGION_ID" | awk '{ print toupper($0) }' | sed "s/\./_/g")
 
-echo "Cluster Region: $CLUSTER_REGION_ID"
-
-echo "currentdir: " $currentdir
-echo "kuberootdir: " $kuberootdir
-echo "projectdir: " $projectdir
-
-echo ""
-printf "debug? "
-if [[ -n $debug ]]; then
-  printf "yes"
-else
-  printf "no"
-fi
-
-echo ""
-echo ""
-
 ################
 # CI Setup
 ################
@@ -174,17 +157,39 @@ fi
 # Docker/Kustomization initial stuff
 ################
 
+GOOGLE_PROJECT_ID_DOCKER=${GOOGLE_PROJECT_ID_DOCKER:-$GOOGLE_PROJECT_ID}
+OVERWRITE_APP_IMAGE=${OVERWRITE_APP_IMAGE:-"true"}
+OVERWRITE_WORKER_IMAGE=${OVERWRITE_WORKER_IMAGE:-"true"}
+OVERWRITE_JOBS_IMAGES=${OVERWRITE_JOBS_IMAGES:-"true"}
+
 # Docker images names
-APP_IMAGE_NAME=us.gcr.io/${GOOGLE_PROJECT_ID}/$PROJECT_NAME
+APP_IMAGE_NAME=us.gcr.io/${GOOGLE_PROJECT_ID_DOCKER}/$PROJECT_NAME
 APP_IMAGE=${APP_IMAGE_NAME}:${IMAGES_TAG}
 
-WORKER_IMAGE_NAME=us.gcr.io/${GOOGLE_PROJECT_ID}/$PROJECT_NAME-workers
+WORKER_IMAGE_NAME=us.gcr.io/${GOOGLE_PROJECT_ID_DOCKER}/$PROJECT_NAME-workers
 WORKER_IMAGE=${WORKER_IMAGE_NAME}:${IMAGES_TAG}
 
 CRONJOBS_DEFAULT_IMAGE=${APP_IMAGE:-"node:10-alpine"}
 
 echo "Setting main docker image to: [$APP_IMAGE]"
 echo "Setting workers docker image to: [$WORKER_IMAGE]"
+
+echo "Cluster Region: $CLUSTER_REGION_ID"
+
+echo "currentdir: " $currentdir
+echo "kuberootdir: " $kuberootdir
+echo "projectdir: " $projectdir
+
+echo ""
+printf "debug? "
+if [[ -n $debug ]]; then
+  printf "yes"
+else
+  printf "no"
+fi
+
+echo ""
+echo ""
 
 PROJECT_DOCKERFILE_MAIN=${PROJECT_DOCKERFILE_MAIN:-"$projectdir/Dockerfile"}
 PROJECT_DOCKERFILE_WORKER=${PROJECT_DOCKERFILE_WORKER:-"$projectdir/Dockerfile.cron"}
@@ -410,11 +415,16 @@ if [[ -z ${SKIP_IMAGE_BUILD+x} ]]; then
     echo ""
 
     if [[ $has_main_dockerfile == "true" ]]; then
-      echo "Starting main Dockerfile build"
-      $debug docker build -t $APP_IMAGE .
+      if [[ "$(docker images -q $APP_IMAGE 2> /dev/null)" == "" || "$OVERWRITE_APP_IMAGE" == "true" ]]; then
+        [[ "$OVERWRITE_APP_IMAGE" == "true" ]] && echo "Overwriting existing image at \"$APP_IMAGE\""
+        echo "Starting main Dockerfile build"
+        $debug docker build -t $APP_IMAGE .
 
-      echo "Pushing built main docker image to GCR."
-      $debug docker push $APP_IMAGE
+        echo "Pushing built main docker image to GCR."
+        $debug docker push $APP_IMAGE
+      else
+        echo "Not building main Dockerfile because an existing image exists at \"$APP_IMAGE\" and OVERWRITE_APP_IMAGE=true was not passed"
+      fi
     else
       echo "No main Dockerfile found, skipping..."
     fi
@@ -422,11 +432,17 @@ if [[ -z ${SKIP_IMAGE_BUILD+x} ]]; then
     echo ""
 
     if [[ $has_worker_dockerfile == "true" ]]; then
-      echo "Starting worker Dockerfile build"
-      $debug docker build -t $WORKER_IMAGE -f Dockerfile.cron .
+      if [[ "$(docker images -q $WORKER_IMAGE 2> /dev/null)" == "" || "$OVERWRITE_WORKER_IMAGE" == "true" ]]; then
+        [[ "$OVERWRITE_WORKER_IMAGE" == "true" ]] && echo "Overwriting existing image at \"$WORKER_IMAGE\""
 
-      echo "Pushing built worker docker image to GCR."
-      $debug docker push $WORKER_IMAGE
+        echo "Starting worker Dockerfile build"
+        $debug docker build -t $WORKER_IMAGE -f Dockerfile.cron .
+
+        echo "Pushing built worker docker image to GCR."
+        $debug docker push $WORKER_IMAGE
+      else
+        echo "Not building worker Dockerfile because an existing image exists at \"$WORKER_IMAGE\" and OVERWRITE_WORKER_IMAGE=true was not passed"
+      fi
     else
       echo "No worker Dockerfile found, skipping..."
     fi
@@ -505,6 +521,7 @@ export CLUSTER_REGION_ID=$CLUSTER_REGION_ID
 export COMMIT_SHA1=$COMMIT_SHA1
 export PROJECT_NAME=$PROJECT_NAME
 export IMAGES_TAG=$IMAGES_TAG
+export GOOGLE_PROJECT_ID_DOCKER=$GOOGLE_PROJECT_ID_DOCKER
 
 echo ""
 echo ""

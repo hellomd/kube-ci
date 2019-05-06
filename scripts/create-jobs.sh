@@ -9,7 +9,7 @@ set -eo pipefail
 usage() {
   echo "Usage: $0 -j <full path to jobs dir> -i <default image> -b <kustomize base> [-d debug]" 1>&2
   echo "Required Envs:" 1>&2
-  echo "- GOOGLE_PROJECT_ID" 1>&2
+  echo "- GOOGLE_PROJECT_ID_DOCKER" 1>&2
   echo "- PROJECT_NAME" 1>&2
   echo "- ENV" 1>&2
   echo "- COMMIT_SHA1" 1>&2
@@ -20,7 +20,7 @@ usage() {
 
 missing_required_env=false
 for required_env in \
-  GOOGLE_PROJECT_ID \
+  GOOGLE_PROJECT_ID_DOCKER \
   PROJECT_NAME \
   ENV \
   COMMIT_SHA1 \
@@ -36,6 +36,7 @@ done
 
 # everyday at 8am UTC (around midnight CA)
 DEFAULT_JOB_SCHEDULE='0 8 * * *'
+OVERWRITE_JOBS_IMAGES=${OVERWRITE_JOBS_IMAGES:-"true"}
 
 currentdir="$(dirname "$(readlink -f "$0")")"
 kuberootdir="$(readlink -f "$currentdir/../")"
@@ -106,12 +107,19 @@ function create_job() {
   JOB_IMAGE=$defaultimg
 
   if [[ -f "$jobdir/Dockerfile" ]]; then
-    JOB_IMAGE=us.gcr.io/$GOOGLE_PROJECT_ID/$PROJECT_NAME-job-$jobname:$IMAGES_TAG
+    JOB_IMAGE=us.gcr.io/$GOOGLE_PROJECT_ID_DOCKER/$PROJECT_NAME-job-$jobname:$IMAGES_TAG
 
-    echo "-> Found Dockerfile for job, building it"
-    $debug docker build -t $JOB_IMAGE $jobdir
-    echo "-> Pushing built job docker image to GCR"
-    $debug docker push $JOB_IMAGE
+    if [[ "$(docker images -q $JOB_IMAGE 2> /dev/null)" == "" || "$OVERWRITE_JOBS_IMAGES" == "true" ]]; then
+      [[ "$OVERWRITE_JOBS_IMAGES" == "true" ]] && echo "-> Overwriting existing image at \"$JOB_IMAGE\""
+
+      echo "-> Found Dockerfile for job, building it"
+      $debug docker build -t $JOB_IMAGE $jobdir
+
+      echo "-> Pushing built job docker image to GCR"
+      $debug docker push $JOB_IMAGE
+    else
+      echo "-> Not building worker Dockerfile because an existing image exists at \"$JOB_IMAGE\" and OVERWRITE_JOBS_IMAGES=true was not passed"
+    fi
   fi
 
   echo "-> Using docker image: $JOB_IMAGE"
