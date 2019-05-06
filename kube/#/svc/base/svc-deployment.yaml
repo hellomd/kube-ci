@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: main
-          image: $APP_IMAGE
+          image: $IMAGE
           imagePullPolicy: Always
           ports:
             - containerPort: 80
