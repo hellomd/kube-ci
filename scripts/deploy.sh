@@ -48,7 +48,7 @@ IFS=', ' read -r -a cluster_regions <<< "$CLUSTER_REGION_ID"
 
 for region in "${cluster_regions[@]}"; do
   echo "################################################################"
-  printf "# DEPLOYING TO ${ENV^^} on %-32s #\n" ${region^^}
+  printf "# DEPLOYING TO ${ENV^^} ON %-32s #\n" ${region^^}
   echo "################################################################"
   echo ""
   echo "Running: $currentdir/kube-env-deploy.sh -e $ENV -r $region" "${child_args[@]}"
