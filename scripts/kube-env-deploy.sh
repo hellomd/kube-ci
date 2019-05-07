@@ -68,8 +68,8 @@ done
 shift $((OPTIND - 1))
 
 # Cluster region is a string
+CLUSTER_REGION_ID_PATH=$(echo "$CLUSTER_REGION_ID" | awk '{ print tolower($0) }')
 CLUSTER_REGION_ID=$(printf '%s\n' "$CLUSTER_REGION_ID" | awk '{ print toupper($0) }' | sed "s/\./_/g")
-
 ################
 # CI Setup
 ################
@@ -252,8 +252,8 @@ cp -rf $projectdir/kube $projectdir/kube.out
 ################
 main_kustomization_file="$projectdir/kube.out/#/main/base/kustomization.yaml"
 main_env_kustomization_file="$projectdir/kube.out/#/main/overlays/$ENV/kustomization.yaml"
-main_cluster_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID/main/base/kustomization.yaml
-main_cluster_env_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID/main/overlays/$ENV/kustomization.yaml
+main_cluster_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID_PATH/main/base/kustomization.yaml
+main_cluster_env_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID_PATH/main/overlays/$ENV/kustomization.yaml
 main_possible_kustomization_files=(
   "$main_cluster_env_kustomization_file"
   "$main_cluster_kustomization_file"
@@ -292,8 +292,8 @@ fi
 ################
 worker_kustomization_file="$projectdir/kube.out/#/worker/base/kustomization.yaml"
 worker_env_kustomization_file="$projectdir/kube.out/#/worker/overlays/$ENV/kustomization.yaml"
-worker_cluster_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID/worker/base/kustomization.yaml
-worker_cluster_env_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID/worker/overlays/$ENV/kustomization.yaml
+worker_cluster_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID_PATH/worker/base/kustomization.yaml
+worker_cluster_env_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID_PATH/worker/overlays/$ENV/kustomization.yaml
 worker_possible_kustomization_files=(
   "$worker_cluster_env_kustomization_file"
   "$worker_cluster_kustomization_file"
@@ -332,8 +332,8 @@ fi
 ################
 jobs_kustomization_file="$projectdir/kube.out/#/jobs/base/kustomization.yaml"
 jobs_env_kustomization_file="$projectdir/kube.out/#/jobs/overlays/$ENV/kustomization.yaml"
-jobs_cluster_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID/jobs/base/kustomization.yaml
-jobs_cluster_env_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID/jobs/overlays/$ENV/kustomization.yaml
+jobs_cluster_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID_PATH/jobs/base/kustomization.yaml
+jobs_cluster_env_kustomization_file=$projectdir/kube.out/$CLUSTER_REGION_ID_PATH/jobs/overlays/$ENV/kustomization.yaml
 jobs_possible_kustomization_files=(
   "$jobs_cluster_env_kustomization_file"
   "$jobs_cluster_kustomization_file"
@@ -464,21 +464,66 @@ rm -rf $kuberootdir/kube.out
 cp -rf $kuberootdir/kube $kuberootdir/kube.out
 mkdir -p $kuberootdir/kube.out/manifests/
 
+# .env.yaml file handling
+# We cannot simply append the value to the array
+# https://github.com/kubernetes/kubernetes/issues/58477
+# $1 is the path to the file
+function add_env_vars() {
+  echo "found .env.yaml file at $1"
+
+  env_json=$(yq r -j $1)
+
+  # svc
+  svc_file="$kuberootdir/kube.out/#/svc/base/svc-deployment.yaml"
+  svc_json=$(yq r -j $svc_file)
+  # worker
+  worker_file="$kuberootdir/kube.out/#/worker/base/worker-deployment.yaml"
+  worker_json=$(yq r -j $worker_file)
+  # jbos
+  jobs_file="$kuberootdir/kube.out/#/jobs/base/cronjob.yaml"
+  jobs_json=$(yq r -j $jobs_file)
+
+  # jq magic follows
+  # svc
+  echo "adding their contents to base svc definitions"
+  jq '.[0].spec.template.spec.containers[0].env=(.[1]+.[0].spec.template.spec.containers[0].env | unique_by(.name)) | .[0]' \
+    -s <(echo "$svc_json") <(echo "$env_json") | yq r - > $svc_file
+  # worker
+  echo "adding their contents to base worker definitions"
+  jq '.[0].spec.template.spec.containers[0].env=(.[1]+.[0].spec.template.spec.containers[0].env | unique_by(.name)) | .[0]' \
+    -s <(echo "$worker_json") <(echo "$env_json") | yq r - > $worker_file
+  # jobs
+  echo "adding their contents to base jobs definitions"
+  jq '.[0].spec.jobTemplate.spec.template.spec.containers[0].env=(.[1]+.[0].spec.jobTemplate.spec.template.spec.containers[0].env | unique_by(.name)) | .[0]' \
+    -s <(echo "$jobs_json") <(echo "$env_json") | yq r - > $jobs_file
+}
+
+if [ -f "$projectdir/kube.out/#/.env.yaml" ]; then
+  echo ""
+  add_env_vars "$projectdir/kube.out/#/.env.yaml"
+fi
+
+# Do it again, but this time for the cluster one, if it exists
+if [ -f "$projectdir/kube.out/$CLUSTER_REGION_ID_PATH/.env.yaml" ]; then
+  echo ""
+  add_env_vars "$projectdir/kube.out/$CLUSTER_REGION_ID_PATH/.env.yaml"
+fi
+
 kustomize_default_svc_folders=(
-  "$kuberootdir/kube.out/$CLUSTER_REGION_ID/svc/overlays/$ENV/"
-  "$kuberootdir/kube.out/$CLUSTER_REGION_ID/svc/base/"
+  "$kuberootdir/kube.out/$CLUSTER_REGION_ID_PATH/svc/overlays/$ENV/"
+  "$kuberootdir/kube.out/$CLUSTER_REGION_ID_PATH/svc/base/"
   "$kuberootdir/kube.out/#/svc/overlays/$ENV/"
   "$kuberootdir/kube.out/#/svc/base/"
 )
 kustomize_default_jobs_folders=(
-  "$kuberootdir/kube.out/$CLUSTER_REGION_ID/jobs/overlays/$ENV/"
-  "$kuberootdir/kube.out/$CLUSTER_REGION_ID/jobs/base/"
+  "$kuberootdir/kube.out/$CLUSTER_REGION_ID_PATH/jobs/overlays/$ENV/"
+  "$kuberootdir/kube.out/$CLUSTER_REGION_ID_PATH/jobs/base/"
   "$kuberootdir/kube.out/#/jobs/overlays/$ENV/"
   "$kuberootdir/kube.out/#/jobs/base/"
 )
 kustomize_default_worker_folders=(
-  "$kuberootdir/kube.out/$CLUSTER_REGION_ID/worker/overlays/$ENV/"
-  "$kuberootdir/kube.out/$CLUSTER_REGION_ID/worker/base/"
+  "$kuberootdir/kube.out/$CLUSTER_REGION_ID_PATH/worker/overlays/$ENV/"
+  "$kuberootdir/kube.out/$CLUSTER_REGION_ID_PATH/worker/base/"
   "$kuberootdir/kube.out/#/worker/overlays/$ENV/"
   "$kuberootdir/kube.out/#/worker/base/"
 )
@@ -524,6 +569,7 @@ echo ""
 # Export required vars for subshells
 export ENV=$ENV
 export CLUSTER_REGION_ID=$CLUSTER_REGION_ID
+export CLUSTER_REGION_ID_PATH=$CLUSTER_REGION_ID_PATH
 export COMMIT_SHA1=$COMMIT_SHA1
 export PROJECT_NAME=$PROJECT_NAME
 export IMAGES_TAG=$IMAGES_TAG
@@ -571,7 +617,7 @@ for filename in $projectdir/kube.out/**/*/kustomization.yaml; do
 
   # env vars to subst follow below
   $currentdir/replace-envs-on-file.sh -f $filename -o \
-    '$ENV $CLUSTER_REGION_ID $K8S_KUSTOMIZATION_SVC_BASE $K8S_KUSTOMIZATION_JOBS_BASE $K8S_KUSTOMIZATION_WORKER_BASE'
+    '$ENV $CLUSTER_REGION_ID $CLUSTER_REGION_ID_PATH $K8S_KUSTOMIZATION_SVC_BASE $K8S_KUSTOMIZATION_JOBS_BASE $K8S_KUSTOMIZATION_WORKER_BASE'
 
   echo "Using Base Kustomize main folder: $K8S_KUSTOMIZATION_SVC_BASE ($KUSTOMIZE_DEFAULT_SVC_FOLDER)"
   echo "Using Base Kustomize jobs folder: $K8S_KUSTOMIZATION_JOBS_BASE ($KUSTOMIZE_DEFAULT_JOBS_FOLDER)"
@@ -581,12 +627,14 @@ for filename in $projectdir/kube.out/**/*/kustomization.yaml; do
 done
 
 if [[ $has_main_deployment == "true" ]]; then
+  echo "Calling kustomize on $kustomize_main_project_folder and saving output to $kuberootdir/kube.out/manifests/main.yaml"
   kustomize build $kustomize_main_project_folder >$kuberootdir/kube.out/manifests/main.yaml
   IMAGE=$APP_IMAGE $currentdir/replace-envs-on-file.sh -f $kuberootdir/kube.out/manifests/main.yaml -o \
     '$ENV $PROJECT_NAME $COMMIT_SHA1 $IMAGE'
 fi
 
 if [[ $has_worker_deployment == "true" ]]; then
+  echo "Calling kustomize on $kustomize_worker_project_folder and saving output to $kuberootdir/kube.out/manifests/worker.yaml"
   kustomize build $kustomize_worker_project_folder >$kuberootdir/kube.out/manifests/worker.yaml
   IMAGE=$WORKER_IMAGE $currentdir/replace-envs-on-file.sh -f $kuberootdir/kube.out/manifests/worker.yaml -o \
     '$ENV $PROJECT_NAME $COMMIT_SHA1 $IMAGE'
