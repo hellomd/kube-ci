@@ -417,8 +417,14 @@ if [[ -z ${SKIP_IMAGE_BUILD+x} ]]; then
     if [[ $has_main_dockerfile == "true" ]]; then
       if [[ "$(docker images -q $APP_IMAGE 2> /dev/null)" == "" || "$OVERWRITE_APP_IMAGE" == "true" ]]; then
         [[ "$OVERWRITE_APP_IMAGE" == "true" ]] && echo "Overwriting existing image at \"$APP_IMAGE\""
-        echo "Starting main Dockerfile build"
-        $debug docker build -t $APP_IMAGE .
+
+        if [[ "$(docker images -q prebuilt-main-image 2> /dev/null)" != "" ]]; then
+          echo "Prebuilt main image found, just tagging it"
+          $debug docker tag prebuilt-main-image $APP_IMAGE
+        else
+          echo "Starting main Dockerfile build"
+          $debug docker build -t $APP_IMAGE .
+        fi
 
         echo "Pushing built main docker image to GCR."
         $debug docker push $APP_IMAGE
