@@ -14,6 +14,7 @@ usage() {
   echo "- ENV" 1>&2
   echo "- COMMIT_SHA1" 1>&2
   echo "- CLUSTER_REGION_ID" 1>&2
+  echo "- CLUSTER_REGION_ID_PATH" 1>&2
   echo "- IMAGES_TAG" 1>&2
   exit 1
 }
@@ -25,6 +26,7 @@ for required_env in \
   ENV \
   COMMIT_SHA1 \
   CLUSTER_REGION_ID \
+  CLUSTER_REGION_ID_PATH \
   IMAGES_TAG; do
   if [ -z "${!required_env}" ]; then
     missing_required_env=true
@@ -131,8 +133,8 @@ function create_job() {
   # if global, we can have different kustomization files per cluster / env 
   if [[ $is_global == "true" ]]; then
     kustomize_job_folders=(
-      "$jobdir/kube/$CLUSTER_REGION_ID/overlays/$ENV/"
-      "$jobdir/kube/$CLUSTER_REGION_ID/base/"
+      "$jobdir/kube/$CLUSTER_REGION_ID_PATH/overlays/$ENV/"
+      "$jobdir/kube/$CLUSTER_REGION_ID_PATH/base/"
       "$jobdir/kube/#/overlays/$ENV/"
       "$jobdir/kube/#/base/"
     )
@@ -172,9 +174,10 @@ function create_job() {
 
     printf -- "-> "
     $currentdir/replace-envs-on-file.sh -f $filename -o \
-      '$ENV $CLUSTER_REGION_ID $K8S_KUSTOMIZATION_JOBS_BASE'
+      '$ENV $CLUSTER_REGION_ID $CLUSTER_REGION_ID_PATH $K8S_KUSTOMIZATION_JOBS_BASE'
   done
 
+  echo "-> Calling kustomize on $kustomize_job_folder and saving output to $kuberootdir/kube.out/manifests/jobs/job-$jobname.yaml"
   kustomize build $kustomize_job_folder > $kuberootdir/kube.out/manifests/jobs/job-$jobname.yaml
 
   # Make some new vars visible
@@ -194,7 +197,7 @@ for jobdir in $jobsdir/\#/*; do
   create_job $jobdir 1
 done
 
-for jobdir in $jobsdir/$CLUSTER_REGION_ID/*; do
+for jobdir in $jobsdir/$CLUSTER_REGION_ID_PATH/*; do
   [[ -d "$jobdir" ]] || continue
   
   create_job $jobdir 0
