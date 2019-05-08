@@ -473,6 +473,8 @@ function add_env_vars() {
 
   env_json=$(yq r -j $1)
 
+  echo "getting json from other bases"
+
   # svc
   svc_file="$kuberootdir/kube.out/#/svc/base/svc-deployment.yaml"
   svc_json=$(yq r -j $svc_file)
@@ -485,15 +487,15 @@ function add_env_vars() {
 
   # jq magic follows
   # svc
-  echo "adding their contents to base svc definitions"
+  echo "adding .env.yaml envs to base svc definitions"
   jq '.[0].spec.template.spec.containers[0].env=(.[1]+.[0].spec.template.spec.containers[0].env | unique_by(.name)) | .[0]' \
     -s <(echo "$svc_json") <(echo "$env_json") | yq r - > $svc_file
   # worker
-  echo "adding their contents to base worker definitions"
+  echo "adding .env.yaml envs to base worker definitions"
   jq '.[0].spec.template.spec.containers[0].env=(.[1]+.[0].spec.template.spec.containers[0].env | unique_by(.name)) | .[0]' \
     -s <(echo "$worker_json") <(echo "$env_json") | yq r - > $worker_file
   # jobs
-  echo "adding their contents to base jobs definitions"
+  echo "adding .env.yaml envs to base jobs definitions"
   jq '.[0].spec.jobTemplate.spec.template.spec.containers[0].env=(.[1]+.[0].spec.jobTemplate.spec.template.spec.containers[0].env | unique_by(.name)) | .[0]' \
     -s <(echo "$jobs_json") <(echo "$env_json") | yq r - > $jobs_file
 }
