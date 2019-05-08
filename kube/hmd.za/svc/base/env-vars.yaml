@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $PROJECT_NAME
+spec:
+  template:
+    spec:
+      containers:
+        - name: main
+          env:
+            - name: ELASTIC_APM_ACTIVE
+              value: "false"
+            - name: ELASTIC_APM_SECRET_TOKEN
+              value: "false"
