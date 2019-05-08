@@ -36,7 +36,8 @@ RUN \
     # Kustomize
     sigs.k8s.io/kustomize \
     # yq - yaml processing
-    gopkg.in/mikefarah/yq.v2
+    gopkg.in/mikefarah/yq.v2 \
+  && ln -s $GOPATH/bin/yq.v2 /usr/local/bin/yq
 
 # Legacy scripts
 COPY legacy/ /scripts/

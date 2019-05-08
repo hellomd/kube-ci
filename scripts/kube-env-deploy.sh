@@ -471,6 +471,12 @@ mkdir -p $kuberootdir/kube.out/manifests/
 function add_env_vars() {
   echo "found .env.yaml file at $1"
 
+  if [ ! -x "$(command -v yq)" ]; then
+    echo "yq command not found on path" >&2
+    echo "please install it: https://github.com/mikefarah/yq" >&2
+    exit 1
+  fi
+
   env_json=$(yq r -j $1)
 
   echo "getting json from other bases"
