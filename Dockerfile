@@ -1,19 +1,14 @@
 FROM docker:17.06.1-ce as static-docker-source
 FROM node:10.15.3 as node
 FROM golang:1.12.4-stretch as go
-FROM google/cloud-sdk
+FROM google/cloud-sdk:245.0.0
 
 RUN mkdir -p /opt
 
 RUN \
   apt-get update \
-  # software-properties-common is needed for add-apt-repository below
-  # jq and yq are for yaml / json manipulation 
-  && apt-get -y install gettext-base jq software-properties-common \
-  && add-apt-repository ppa:rmescandon/yq \
-  && apt-get update \
-  && apt-get -y install yq \
-  && apt-get -y remove software-properties-common \
+  # jq is for json manipulation 
+  && apt-get -y install gettext-base jq \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
@@ -40,8 +35,12 @@ ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
-# Kustomize
-RUN go get sigs.k8s.io/kustomize
+RUN \
+  go get \
+    # Kustomize
+    sigs.k8s.io/kustomize \
+    # yq - yaml processing
+    gopkg.in/mikefarah/yq.v2
 
 # Legacy scripts
 COPY legacy/ /scripts/
