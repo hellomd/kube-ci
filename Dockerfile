@@ -6,10 +6,14 @@ FROM google/cloud-sdk
 RUN mkdir -p /opt
 
 RUN \
-  add-apt-repository ppa:rmescandon/yq \
-  && apt-get update \
+  apt-get update \
+  # software-properties-common is needed for add-apt-repository below
   # jq and yq are for yaml / json manipulation 
-  && apt-get -y install gettext-base jq yq \
+  && apt-get -y install gettext-base jq software-properties-common \
+  && add-apt-repository ppa:rmescandon/yq \
+  && apt-get update \
+  && apt-get -y install yq \
+  && apt-get -y remove software-properties-common \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
