@@ -16,6 +16,7 @@ usage() {
   echo "- CLUSTER_REGION_ID" 1>&2
   echo "- CLUSTER_REGION_ID_PATH" 1>&2
   echo "- IMAGES_TAG" 1>&2
+  echo "- GCR_TOKEN" 1>&2
   exit 1
 }
 
@@ -27,7 +28,8 @@ for required_env in \
   COMMIT_SHA1 \
   CLUSTER_REGION_ID \
   CLUSTER_REGION_ID_PATH \
-  IMAGES_TAG; do
+  IMAGES_TAG \
+  GCR_TOKEN; do
   if [ -z "${!required_env}" ]; then
     missing_required_env=true
     echo "$required_env is not set" 1>&2
@@ -111,7 +113,7 @@ function create_job() {
   if [[ -f "$jobdir/Dockerfile" ]]; then
     JOB_IMAGE=us.gcr.io/$GOOGLE_PROJECT_ID_DOCKER/$PROJECT_NAME-job-$jobname:$IMAGES_TAG
 
-    if [[ "$(docker images -q $JOB_IMAGE 2> /dev/null)" == "" || "$OVERWRITE_JOBS_IMAGES" == "true" ]]; then
+    if [[ "$OVERWRITE_JOBS_IMAGES" == "true" || $(curl -H "Authorization: Bearer $GCR_TOKEN" --fail https://us.gcr.io/v2/$GOOGLE_PROJECT_ID_DOCKER/$PROJECT_NAME-job-$jobname/manifests/$IMAGES_TAG 2>/dev/null) == "" ]]; then
       [[ "$OVERWRITE_JOBS_IMAGES" == "true" ]] && echo "-> Overwriting existing image at \"$JOB_IMAGE\""
 
       echo "-> Found Dockerfile for job, building it"

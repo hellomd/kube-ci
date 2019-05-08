@@ -1,3 +1,4 @@
+#!/bin/bash
 function get_first_dir_with_kustomization_file() {
   filenames=("$@")
   for filename in "${filenames[@]}"; do

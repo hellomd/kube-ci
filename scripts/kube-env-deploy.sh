@@ -163,10 +163,12 @@ OVERWRITE_WORKER_IMAGE=${OVERWRITE_WORKER_IMAGE:-"true"}
 OVERWRITE_JOBS_IMAGES=${OVERWRITE_JOBS_IMAGES:-"true"}
 
 # Docker images names
-APP_IMAGE_NAME=us.gcr.io/${GOOGLE_PROJECT_ID_DOCKER}/$PROJECT_NAME
+APP_IMAGE_NAME_ONLY=$PROJECT_NAME
+APP_IMAGE_NAME=us.gcr.io/${GOOGLE_PROJECT_ID_DOCKER}/$APP_IMAGE_NAME_ONLY
 APP_IMAGE=${APP_IMAGE_NAME}:${IMAGES_TAG}
 
-WORKER_IMAGE_NAME=us.gcr.io/${GOOGLE_PROJECT_ID_DOCKER}/$PROJECT_NAME-workers
+WORKER_IMAGE_NAME_ONLY=$PROJECT_NAME-workers
+WORKER_IMAGE_NAME=us.gcr.io/${GOOGLE_PROJECT_ID_DOCKER}/$WORKER_IMAGE_NAME_ONLY
 WORKER_IMAGE=${WORKER_IMAGE_NAME}:${IMAGES_TAG}
 
 CRONJOBS_DEFAULT_IMAGE=${APP_IMAGE:-"node:10-alpine"}
@@ -402,6 +404,8 @@ echo ""
 ################
 # Docker Image Building
 ################
+GCR_TOKEN="$(gcloud config config-helper --format 'value(credential.access_token)')"
+
 if [[ -z ${SKIP_IMAGE_BUILD+x} ]]; then
 
   if [[ -f "$projectdir/kube.out/#-build-docker-images.sh" ]]; then
@@ -415,7 +419,7 @@ if [[ -z ${SKIP_IMAGE_BUILD+x} ]]; then
     echo ""
 
     if [[ $has_main_dockerfile == "true" ]]; then
-      if [[ "$(docker images -q $APP_IMAGE 2> /dev/null)" == "" || "$OVERWRITE_APP_IMAGE" == "true" ]]; then
+      if [[ "$OVERWRITE_APP_IMAGE" == "true" || $(curl -H "Authorization: Bearer $GCR_TOKEN" --fail https://us.gcr.io/v2/$GOOGLE_PROJECT_ID_DOCKER/$APP_IMAGE_NAME_ONLY/manifests/$IMAGES_TAG 2>/dev/null) == "" ]]; then
         [[ "$OVERWRITE_APP_IMAGE" == "true" ]] && echo "Overwriting existing image at \"$APP_IMAGE\""
 
         if [[ "$(docker images -q prebuilt-main-image 2> /dev/null)" != "" ]]; then
@@ -438,7 +442,7 @@ if [[ -z ${SKIP_IMAGE_BUILD+x} ]]; then
     echo ""
 
     if [[ $has_worker_dockerfile == "true" ]]; then
-      if [[ "$(docker images -q $WORKER_IMAGE 2> /dev/null)" == "" || "$OVERWRITE_WORKER_IMAGE" == "true" ]]; then
+      if [[ "$OVERWRITE_WORKER_IMAGE" == "true" || $(curl -H "Authorization: Bearer $GCR_TOKEN" --fail https://us.gcr.io/v2/$GOOGLE_PROJECT_ID_DOCKER/$WORKER_IMAGE_NAME_ONLY/manifests/$IMAGES_TAG 2>/dev/null) == "" ]]; then
         [[ "$OVERWRITE_WORKER_IMAGE" == "true" ]] && echo "Overwriting existing image at \"$WORKER_IMAGE\""
 
         echo "Starting worker Dockerfile build"
@@ -582,6 +586,7 @@ export COMMIT_SHA1=$COMMIT_SHA1
 export PROJECT_NAME=$PROJECT_NAME
 export IMAGES_TAG=$IMAGES_TAG
 export GOOGLE_PROJECT_ID_DOCKER=$GOOGLE_PROJECT_ID_DOCKER
+export GCR_TOKEN=$GCR_TOKEN
 
 echo ""
 echo ""
