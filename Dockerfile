@@ -1,4 +1,3 @@
-FROM docker:17.06.1-ce as static-docker-source
 FROM node:10.15.3 as node
 FROM golang:1.12.4-stretch as go
 FROM google/cloud-sdk:245.0.0
@@ -16,9 +15,6 @@ RUN \
 ENV LINKERD2_VERSION stable-2.3.0
 RUN curl -sL https://run.linkerd.io/install | sh
 ENV PATH="${PATH}:/root/.linkerd2/bin"
-
-# Docker
-COPY --from=static-docker-source /usr/local/bin/docker /usr/local/bin/docker
 
 # Node.js
 ## Must match same at https://github.com/nodejs/docker-node/blob/master/10/stretch/Dockerfile#L44
