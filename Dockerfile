@@ -6,8 +6,10 @@ FROM google/cloud-sdk
 RUN mkdir -p /opt
 
 RUN \
-  apt-get update \
-  && apt-get -y install gettext-base \
+  add-apt-repository ppa:rmescandon/yq \
+  && apt-get update \
+  # jq and yq are for yaml / json manipulation 
+  && apt-get -y install gettext-base jq yq \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
