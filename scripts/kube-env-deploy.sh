@@ -13,11 +13,12 @@ function debug_cmd() {
 # Initial setup
 ################
 usage() {
-  echo "Usage: $0 [-e <production|staging|development>] [-n <project-name>] [-r <region>] [-d enable debug or not]" 1>&2
+  echo "Usage: $0 [-n <project-name>] [-r <region>] [-e <production|staging|development>] [-d enable debug or not]" 1>&2
   echo "" 1>&2
-  echo "-r defaults to \$CLUSTER_REGION_ID, if that is not set, it will default to our main one, hmd" 1>&2
   echo "-n defaults to \$CIRCLE_PROJECT_REPONAME, if that is not set, to the basename of the current directory" 1>&2
+  echo "-r defaults to \$CLUSTER_REGION_ID, if that is not set, it will default to our main one, hmd" 1>&2
   echo "-e defaults to development" 1>&2
+  echo "-d debug mode, disabled by default" 1>&2
   exit 1
 }
 
@@ -43,19 +44,19 @@ IS_CI=${CIRCLECI:-}
 # Docker stuff
 IMAGES_TAG=${IMAGES_TAG:-$COMMIT_SHA1}
 
-while getopts ":e:n:r:d" name; do
+while getopts ":n:r:e:d" name; do
   case "${name}" in
-  e)
-    ENV=${OPTARG}
-    if ! [[ "$ENV" =~ ^(development|staging|production)$ ]]; then
-      usage
-    fi
-    ;;
   n)
     PROJECT_NAME=${OPTARG}
     ;;
   r)
     CLUSTER_REGION_ID=${OPTARG}
+    ;;
+  e)
+    ENV=${OPTARG}
+    if ! [[ "$ENV" =~ ^(development|staging|production)$ ]]; then
+      usage
+    fi
     ;;
   d)
     debug=debug_cmd
