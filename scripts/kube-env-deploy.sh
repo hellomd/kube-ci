@@ -420,7 +420,7 @@ if [[ -z ${SKIP_IMAGE_BUILD+x} ]]; then
 
     if [[ $has_main_dockerfile == "true" ]]; then
       if [[ "$OVERWRITE_APP_IMAGE" == "true" || $(curl -H "Authorization: Bearer $GCR_TOKEN" --fail https://us.gcr.io/v2/$GOOGLE_PROJECT_ID_DOCKER/$APP_IMAGE_NAME_ONLY/manifests/$IMAGES_TAG 2>/dev/null) == "" ]]; then
-        [[ "$OVERWRITE_APP_IMAGE" == "true" ]] && echo "Overwriting existing image at \"$APP_IMAGE\""
+        [[ "$OVERWRITE_APP_IMAGE" == "true" ]] && echo "Overwriting existing image at \"$APP_IMAGE\" if any"
 
         if [[ "$(docker images -q prebuilt-main-image 2> /dev/null)" != "" ]]; then
           echo "Prebuilt main image found, just tagging it"
@@ -443,7 +443,7 @@ if [[ -z ${SKIP_IMAGE_BUILD+x} ]]; then
 
     if [[ $has_worker_dockerfile == "true" ]]; then
       if [[ "$OVERWRITE_WORKER_IMAGE" == "true" || $(curl -H "Authorization: Bearer $GCR_TOKEN" --fail https://us.gcr.io/v2/$GOOGLE_PROJECT_ID_DOCKER/$WORKER_IMAGE_NAME_ONLY/manifests/$IMAGES_TAG 2>/dev/null) == "" ]]; then
-        [[ "$OVERWRITE_WORKER_IMAGE" == "true" ]] && echo "Overwriting existing image at \"$WORKER_IMAGE\""
+        [[ "$OVERWRITE_WORKER_IMAGE" == "true" ]] && echo "Overwriting existing image at \"$WORKER_IMAGE\" if any"
 
         echo "Starting worker Dockerfile build"
         $debug docker build -t $WORKER_IMAGE -f Dockerfile.cron .

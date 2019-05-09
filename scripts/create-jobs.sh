@@ -114,7 +114,7 @@ function create_job() {
     JOB_IMAGE=us.gcr.io/$GOOGLE_PROJECT_ID_DOCKER/$PROJECT_NAME-job-$jobname:$IMAGES_TAG
 
     if [[ "$OVERWRITE_JOBS_IMAGES" == "true" || $(curl -H "Authorization: Bearer $GCR_TOKEN" --fail https://us.gcr.io/v2/$GOOGLE_PROJECT_ID_DOCKER/$PROJECT_NAME-job-$jobname/manifests/$IMAGES_TAG 2>/dev/null) == "" ]]; then
-      [[ "$OVERWRITE_JOBS_IMAGES" == "true" ]] && echo "-> Overwriting existing image at \"$JOB_IMAGE\""
+      [[ "$OVERWRITE_JOBS_IMAGES" == "true" ]] && echo "-> Overwriting existing image at \"$JOB_IMAGE\" if any"
 
       echo "-> Found Dockerfile for job, building it"
       $debug docker build -t $JOB_IMAGE $jobdir
