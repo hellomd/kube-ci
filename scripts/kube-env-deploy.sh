@@ -71,6 +71,24 @@ shift $((OPTIND - 1))
 # Cluster region is a string
 CLUSTER_REGION_ID_PATH=$(echo "$CLUSTER_REGION_ID" | awk '{ print tolower($0) }')
 CLUSTER_REGION_ID=$(printf '%s\n' "$CLUSTER_REGION_ID" | awk '{ print toupper($0) }' | sed "s/\./_/g")
+
+################
+# Bastion Setup
+################
+function gcloud_ssh() {
+  $debug gcloud compute ssh --project "root-networking" --zone "us-west2-a" "$@"
+}
+
+function gcloud_scp() {
+  $debug gcloud compute scp --project "root-networking" --zone "us-west2-a" "$@"
+}
+
+# Right now only hmd.za#production is using bastion
+should_use_bastion="false"
+if [[ $ENV == "production" && $CLUSTER_REGION_ID_PATH == "hmd.za" ]]; then
+  should_use_bastion="true"
+fi
+
 ################
 # CI Setup
 ################
@@ -146,13 +164,44 @@ if [[ ! -z "$IS_CI" ]]; then
   gcloud --quiet container clusters get-credentials $CLUSTER
 
   CURRENT_CONTEXT=$(kubectl config current-context)
-  echo "Deploying [$PROJECT_NAME] from CircleCI to [$ENV] on [$CURRENT_CONTEXT]"
+
+  # if remote, we also need to configure gcloud there
+  if [[ $should_use_bastion == "true" ]]; then
+    gcloud_ssh bastion -- /bin/bash << EOF
+      if [[ ! -f ~/gcp-key.json ]]; then
+        echo "${GOOGLE_AUTH}" | base64 -i --decode >~/gcp-key.json
+        gcloud auth activate-service-account --key-file ~/gcp-key.json
+      fi
+      gcloud info
+      gcloud --quiet container clusters get-credentials \
+        --project $GOOGLE_PROJECT_ID \
+        --zone $COMPUTE_ZONE \
+        $CLUSTER
+
+      kubectl cluster-info --context $CURRENT_CONTEXT
+EOF
+    echo "Deploying [$PROJECT_NAME] from CircleCI to [$ENV] on [$CURRENT_CONTEXT] via Bastion Host using SSH"
+  else
+    echo "Deploying [$PROJECT_NAME] from CircleCI to [$ENV] on [$CURRENT_CONTEXT]"
+  fi
 else
   # Running locally, so we expect this to be correct
   GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-$(gcloud config list --format 'value(core.project)' 2>/dev/null)}
   CURRENT_CONTEXT=$(kubectl config current-context)
-  echo "Deploying [$PROJECT_NAME] locally to [$ENV] on [$CURRENT_CONTEXT]"
+
+  if [[ $should_use_bastion == "true" ]]; then
+    echo "Deploying [$PROJECT_NAME] locally to [$ENV] on [$CURRENT_CONTEXT] via Bastion Host using SSH"
+    echo ""
+    echo "### NOTE:"
+    echo "Make sure you have logged over SSH"
+    echo " to the bastion host atleast one time before and "
+    echo " logged on your account using \`gcloud auth login\`"
+  else
+    echo "Deploying [$PROJECT_NAME] locally to [$ENV] on [$CURRENT_CONTEXT]"
+  fi
 fi
+
+echo ""
 
 ################
 # Docker/Kustomization initial stuff
@@ -698,13 +747,53 @@ function kubectl_apply() {
   $debug kubectl apply -f $1
 }
 
+if [[ $should_use_bastion == "true" ]]; then
+  if [[ $IS_CI == "true" ]]; then
+    remote_dir="~/kube/manifests/${PROJECT_NAME}/${ENV}/build-${BUILD}"
+  else
+    remote_dir="~/kube/manifests/${PROJECT_NAME}/${ENV}"
+  fi
+
+  echo "Creating $remote_dir/jobs directory tree on Bastion host in case it does not exists."
+
+  # make sure the path exists, we are /jobs because it's the only nested folder that can exist,
+  #  and for scp to work all subfolders must exist.
+  gcloud_ssh bastion --command "mkdir -p $remote_dir/jobs"
+
+  echo ""
+fi
+
 for filename in $kuberootdir/kube.out/manifests/**/*.yaml; do
   [ -e "$filename" ] || continue
-  
-  echo "Calling kubectl apply -f on file $filename"
 
-  $debug kubectl apply -f $filename
+  # if production on hmd.za, use ssh instead
+  if [[ $should_use_bastion == "true" ]]; then
+    remote_base_filename=${filename#"$kuberootdir/kube.out/manifests/"}
+    remote_full_filename=$remote_dir/$remote_base_filename
+
+    echo "Copying local file to Bastion Host: $filename -> $remote_full_filename"
+
+    # first copy manifest file to bastion
+    gcloud_scp \
+      --recurse $filename bastion:$remote_full_filename
+
+    echo "Calling kubectl apply -f on remote file $remote_full_filename"
+
+    # then kubectl apply it
+    gcloud_ssh bastion --command "kubectl --context $CURRENT_CONTEXT apply -f $remote_full_filename"
+
+  else
+    echo "Calling kubectl apply -f on file $filename"
+    $debug kubectl apply -f $filename
+  fi
 done
+
+if [[ $should_use_bastion == "true" ]]; then
+
+  echo "Removing $remote_dir directory on Bastion Host."
+  gcloud_ssh bastion --command "rm -rf $remote_dir"
+  echo ""
+fi
 
 echo ""
 echo ""
