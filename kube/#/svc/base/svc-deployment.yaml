@@ -23,21 +23,23 @@ spec:
             - containerPort: 80
           # This is used when a new replica is created
           # Requests are only going to be forwarded to this probe after this amount of time
+          # See https://app.clubhouse.io/hellomd/story/6341/check-failure-to-graceful-shutdown-on-svcs-it-s-closing-db-before-finishing-current-requests
           readinessProbe:
             httpGet:
               path: /healthcheck
               port: 3000
-            initialDelaySeconds: 5
-            timeoutSeconds: 1
-            periodSeconds: 8
+            initialDelaySeconds: 20
+            timeoutSeconds: 3
+            periodSeconds: 15
             failureThreshold: 20
           livenessProbe:
             httpGet:
               path: /healthcheck
               port: 3000
-            initialDelaySeconds: 50
-            timeoutSeconds: 1
-            periodSeconds: 30
+            initialDelaySeconds: 60
+            timeoutSeconds: 3
+            periodSeconds: 45
+            failureThreshold: 4
           env:
             - name: PROJECT_NAME
               value: $PROJECT_NAME
