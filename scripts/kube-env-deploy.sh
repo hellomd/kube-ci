@@ -75,18 +75,22 @@ CLUSTER_REGION_ID=$(printf '%s\n' "$CLUSTER_REGION_ID" | awk '{ print toupper($0
 ################
 # Bastion Setup
 ################
-function gcloud_ssh() {
-  $debug gcloud compute ssh --project "root-networking" --zone "us-west2-a" "$@"
+function gcloud_ssh_bastion() {
+  $debug gcloud compute ssh --project "root-networking" --zone "us-west2-a" bastion "$@"
 }
 
-function gcloud_scp() {
-  $debug gcloud compute scp --project "root-networking" --zone "us-west2-a" "$@"
+# Copy local file to bastion
+# gcloud_scp_to_bastion local_file remote_file
+function gcloud_scp_to_bastion() {
+  echo "Copying local file to Bastion Host: $1 -> $2"
+  $debug gcloud compute scp --project "root-networking" --zone "us-west2-a" \
+    --recurse $1 bastion:$2
 }
 
 # Right now only hmd.za#production is using bastion
-should_use_bastion="false"
+SHOULD_USE_BASTION="false"
 if [[ $ENV == "production" && $CLUSTER_REGION_ID_PATH == "hmd.za" ]]; then
-  should_use_bastion="true"
+  SHOULD_USE_BASTION="true"
 fi
 
 ################
@@ -166,8 +170,8 @@ if [[ ! -z "$IS_CI" ]]; then
   CURRENT_CONTEXT=$(kubectl config current-context)
 
   # if remote, we also need to configure gcloud there
-  if [[ $should_use_bastion == "true" ]]; then
-    gcloud_ssh bastion -- /bin/bash << EOF
+  if [[ $SHOULD_USE_BASTION == "true" ]]; then
+    gcloud_ssh_bastion -- /bin/bash << EOF
       if [[ ! -f ~/gcp-key.json ]]; then
         echo "${GOOGLE_AUTH}" | base64 -i --decode >~/gcp-key.json
         gcloud auth activate-service-account --key-file ~/gcp-key.json
@@ -189,7 +193,7 @@ else
   GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-$(gcloud config list --format 'value(core.project)' 2>/dev/null)}
   CURRENT_CONTEXT=$(kubectl config current-context)
 
-  if [[ $should_use_bastion == "true" ]]; then
+  if [[ $SHOULD_USE_BASTION == "true" ]]; then
     echo "Deploying [$PROJECT_NAME] locally to [$ENV] on [$CURRENT_CONTEXT] via Bastion Host using SSH"
     echo ""
     echo "### NOTE:"
@@ -283,7 +287,7 @@ fi
 [[ -d "./jobs" && -n $(ls -A ./jobs/*/ 2>/dev/null) ]] && has_jobs_folder=true
 
 if [[ $has_main_dockerfile != true && $has_worker_dockerfile != true ]]; then
-  echo "Warning: No Dockerfile or Dockerfile.cron file founds, no image will be built"
+  echo "Warning: No Dockerfile or Dockerfile.cron file found, no image will be built"
 fi
 
 # Helper function to retrieve dirname for each item on array, modifies passed array
@@ -430,23 +434,6 @@ if [[ -z "$IS_CI" ]]; then
     ;;
   esac
 fi
-
-echo ""
-echo ""
-
-################
-# Update Config Maps
-################
-# Run update-configmap if it exists
-if [[ -f "$projectdir/kube.out/#-update-configmaps.sh" ]]; then
-  echo "Script to update config maps found - Updating them"
-  $debug "$projectdir/kube.out/#-update-configmaps.sh"
-else
-  echo "Skipping config maps update - no ./kube.out/#-update-configmaps.sh script found"
-fi
-
-# quit if we only want to do that
-[[ ! -z $UPDATE_CONFIG_ONLY && $UPDATE_CONFIG_ONLY != "false" ]] && echo "UPDATE_CONFIG_ONLY given, stopping now" && exit 0
 
 echo ""
 echo ""
@@ -729,9 +716,65 @@ echo ""
 echo ""
 
 ##############
+# Create Dirs on Bastion If Necessary
+##############
+if [[ $SHOULD_USE_BASTION == "true" ]]; then
+  if [[ $IS_CI == "true" ]]; then
+    BASTION_KUBE_DIR="~/kube/manifests/${PROJECT_NAME}/${ENV}/build-${BUILD}"
+  else
+    BASTION_KUBE_DIR="~/kube/manifests/${PROJECT_NAME}/${ENV}"
+  fi
+
+  echo "Creating $BASTION_KUBE_DIR/jobs directory tree on Bastion host in case it does not exists."
+
+  # make sure the path exists, we are /jobs because it's the only nested folder that can exist,
+  #  and for scp to work all subfolders must exist.
+  gcloud_ssh_bastion --command "mkdir -p $BASTION_KUBE_DIR/jobs"
+
+  echo ""
+fi
+
+################
+# Update Config Maps
+################
+# Create config map using kubectl locally or on bastion host
+# If on bastion host, file will be moved to temp folder and after removed
+# create_configmap $name $file_or_dir
+function create_configmap() {
+  if [[ $SHOULD_USE_BASTION == "true" ]]; then
+    full_file_path=$(readlink -f "$2")
+    if [[ -f "$full_file_path" ]]; then
+      file_basename=$(basename $full_file_path)
+      file_dirname=$(dirname $full_file_path)
+      tar cf - -C $file_dirname . | gcloud_ssh_bastion -- 'D=`mktemp -d`; tar xf - -C $D; echo $(readlink -f $D); ls -al $D; kubectl create configmap '"$1"' --from-file=$D/'"$file_basename"' --dry-run --save-config -o yaml | kubectl apply -f -'
+    elif [[ -d "$full_file_path" ]]; then
+      tar cf - -C $full_file_path . | gcloud_ssh_bastion -- 'D=`mktemp -d`; tar xf - -C $D; echo $(readlink -f $D); ls -al $D; kubectl create configmap '"$1"' --from-file=$D --dry-run --save-config -o yaml | kubectl apply -f -'
+    else
+      echo "Error running create_configmap, $full_file_path is not a file or directory. Bailing out"
+      exit 1  
+    fi
+  else
+    kubectl create configmap $1 --from-file=$2 --dry-run --save-config -o yaml | kubectl apply -f -
+  fi
+}
+
+# Run update-configmap if it exists
+if [[ -f "$projectdir/kube.out/#-update-configmaps.sh" ]]; then
+  echo "Script to update config maps found - Updating them"
+  # It's ran on current context so it inherits the helper functions we defined
+  $debug . "$projectdir/kube.out/#-update-configmaps.sh"
+else
+  echo "Skipping config maps update - no ./kube.out/#-update-configmaps.sh script found"
+fi
+
+# quit if we only want to do that
+[[ ! -z $UPDATE_CONFIG_ONLY && $UPDATE_CONFIG_ONLY != "false" ]] && echo "UPDATE_CONFIG_ONLY given, stopping now" && exit 0
+
+echo ""
+
+##############
 # Kubectl Apply
 ##############
-
 # General function to apply k8s configs, using or not linkerd
 function kubectl_apply() {
   # Linkerd would go here, but we are not using for now
@@ -747,40 +790,21 @@ function kubectl_apply() {
   $debug kubectl apply -f $1
 }
 
-if [[ $should_use_bastion == "true" ]]; then
-  if [[ $IS_CI == "true" ]]; then
-    remote_dir="~/kube/manifests/${PROJECT_NAME}/${ENV}/build-${BUILD}"
-  else
-    remote_dir="~/kube/manifests/${PROJECT_NAME}/${ENV}"
-  fi
-
-  echo "Creating $remote_dir/jobs directory tree on Bastion host in case it does not exists."
-
-  # make sure the path exists, we are /jobs because it's the only nested folder that can exist,
-  #  and for scp to work all subfolders must exist.
-  gcloud_ssh bastion --command "mkdir -p $remote_dir/jobs"
-
-  echo ""
-fi
-
 for filename in $kuberootdir/kube.out/manifests/**/*.yaml; do
   [ -e "$filename" ] || continue
 
   # if production on hmd.za, use ssh instead
-  if [[ $should_use_bastion == "true" ]]; then
+  if [[ $SHOULD_USE_BASTION == "true" ]]; then
     remote_base_filename=${filename#"$kuberootdir/kube.out/manifests/"}
-    remote_full_filename=$remote_dir/$remote_base_filename
-
-    echo "Copying local file to Bastion Host: $filename -> $remote_full_filename"
+    remote_full_filename=$BASTION_KUBE_DIR/$remote_base_filename
 
     # first copy manifest file to bastion
-    gcloud_scp \
-      --recurse $filename bastion:$remote_full_filename
+    gcloud_scp_to_bastion $filename $remote_full_filename
 
     echo "Calling kubectl apply -f on remote file $remote_full_filename"
 
     # then kubectl apply it
-    gcloud_ssh bastion --command "kubectl --context $CURRENT_CONTEXT apply -f $remote_full_filename"
+    gcloud_ssh_bastion --command "kubectl --context $CURRENT_CONTEXT apply -f $remote_full_filename"
 
   else
     echo "Calling kubectl apply -f on file $filename"
@@ -788,10 +812,10 @@ for filename in $kuberootdir/kube.out/manifests/**/*.yaml; do
   fi
 done
 
-if [[ $should_use_bastion == "true" ]]; then
+if [[ $SHOULD_USE_BASTION == "true" ]]; then
 
-  echo "Removing $remote_dir directory on Bastion Host."
-  gcloud_ssh bastion --command "rm -rf $remote_dir"
+  echo "Removing $BASTION_KUBE_DIR directory on Bastion Host."
+  gcloud_ssh_bastion --command "rm -rf $BASTION_KUBE_DIR"
   echo ""
 fi
 
