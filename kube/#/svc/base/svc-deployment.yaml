@@ -40,6 +40,9 @@ spec:
             timeoutSeconds: 3
             periodSeconds: 45
             failureThreshold: 4
+          resources:
+            requests:
+              cpu: 60m
           env:
             - name: PROJECT_NAME
               value: $PROJECT_NAME
