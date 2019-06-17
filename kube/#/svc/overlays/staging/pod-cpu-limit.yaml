@@ -9,4 +9,4 @@ spec:
         - name: main
           resources:
             limits:
-              cpu: 60m
+              cpu: 150m
