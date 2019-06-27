@@ -720,7 +720,7 @@ echo ""
 ##############
 if [[ $SHOULD_USE_BASTION == "true" ]]; then
   if [[ $IS_CI == "true" ]]; then
-    BASTION_KUBE_DIR="~/kube/manifests/${PROJECT_NAME}/${ENV}/build-${BUILD}"
+    BASTION_KUBE_DIR="~/kube/manifests/${PROJECT_NAME}/${ENV}/build-${CIRCLE_BUILD_NUM}"
   else
     BASTION_KUBE_DIR="~/kube/manifests/${PROJECT_NAME}/${ENV}"
   fi
