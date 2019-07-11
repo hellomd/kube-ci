@@ -49,8 +49,6 @@ RUN \
     gopkg.in/mikefarah/yq.v2 \
   && ln -s $GOPATH/bin/yq.v2 /usr/local/bin/yq
 
-RUN kustomize --version
-
 # Legacy scripts
 COPY legacy/ /scripts/
 
