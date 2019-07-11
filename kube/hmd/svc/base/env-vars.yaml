@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $PROJECT_NAME
+spec:
+  template:
+    spec:
+      containers:
+        - name: main
+          env:
+            # Mailing
+            - name: MAILGUN_BASE_URL
+              value: https://api.mailgun.net/v3
+            - name: HMD_NOREPLY_EMAIL
+              value: noreply@email.hellomd.com
