@@ -32,7 +32,7 @@ ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
 # Install Kustomize
-RUN go install sigs.k8s.io/kustomize/v3/cmd/kustomize && kustomize version
+RUN go get sigs.k8s.io/kustomize/v3/cmd/kustomize && kustomize version
 
 # Install yq
 RUN \
