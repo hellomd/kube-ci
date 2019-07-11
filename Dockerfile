@@ -32,7 +32,15 @@ ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
 # Install Kustomize
-RUN go get sigs.k8s.io/kustomize/v3/cmd/kustomize && kustomize version
+RUN opsys=linux && \
+  curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest |\
+  grep browser_download |\
+  grep $opsys |\
+  cut -d '"' -f 4 |\
+  xargs curl -O -L && \
+  mv kustomize_*_${opsys}_amd64 /usr/local/bin/kustomize \
+  chmod u+x /usr/local/bin/kustomize && \
+  kustomize version
 
 # Install yq
 RUN \
