@@ -31,13 +31,17 @@ ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
+# Install Kustomize
+RUN go install sigs.k8s.io/kustomize/v3/cmd/kustomize && kustomize version
+
+# Install yq
 RUN \
   go get \
-    # Kustomize
-    sigs.k8s.io/kustomize \
     # yq - yaml processing
     gopkg.in/mikefarah/yq.v2 \
   && ln -s $GOPATH/bin/yq.v2 /usr/local/bin/yq
+
+RUN kustomize --version
 
 # Legacy scripts
 COPY legacy/ /scripts/
