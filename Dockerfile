@@ -38,7 +38,7 @@ RUN opsys=linux && \
   grep $opsys |\
   cut -d '"' -f 4 |\
   xargs curl -O -L && \
-  mv kustomize_*_${opsys}_amd64 /usr/local/bin/kustomize \
+  mv kustomize_*_${opsys}_amd64 /usr/local/bin/kustomize && \
   chmod u+x /usr/local/bin/kustomize && \
   kustomize version
 
