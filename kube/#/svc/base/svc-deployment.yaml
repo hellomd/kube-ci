@@ -113,3 +113,14 @@ spec:
                 secretKeyRef:
                   name: shared-env
                   key: mongoUrl
+            # Mailing
+            - name: MAILGUN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: mailgunApiKey
+            - name: MAILGUN_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: mailgunDomain
