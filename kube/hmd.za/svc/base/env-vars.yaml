@@ -15,3 +15,5 @@ spec:
               # needed, otherwise we are going to get an error:
               # Invalid value: "": may not be specified when `value` is not empty
               valueFrom: null
+            - name: MAILGUN_BASE_URL
+              value: https://api.eu.mailgun.net/v3

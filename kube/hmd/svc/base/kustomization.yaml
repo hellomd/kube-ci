@@ -1,2 +1,4 @@
 bases:
   - ../../../#/svc/overlays/$ENV
+patches:
+  - env-vars.yaml
