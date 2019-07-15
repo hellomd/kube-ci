@@ -34,6 +34,7 @@ projectdir="${PROJECT_DIR:-$(readlink -f .)}"
 ENV=development
 # cluster identifier
 CLUSTER_REGION_ID=${CLUSTER_REGION_ID:-hmd}
+MAIN_GOOGLE_PROJECT_ID="hellomd-181719"
 # Project name is the repo name on GitHub or the current folder name if deploying locally
 PROJECT_NAME=${CIRCLE_PROJECT_REPONAME:-$(basename $projectdir)}
 # Get commit from CircleCI or git sha
@@ -92,6 +93,15 @@ SHOULD_USE_BASTION="false"
 if [[ $ENV == "production" && $CLUSTER_REGION_ID_PATH == "hmd.za" ]]; then
   SHOULD_USE_BASTION="true"
 fi
+
+
+################
+# Development Setup
+################
+# This is used when running locally to identify the correct gcloud project id and kubernetes context
+#  Instead of relying on it being correct on the developer machine
+declare -A kubernetes_project_map=( ["HMD"]="hellomd-181719" ["HMD_ZA"]="hellomd-za" )
+declare -A kubernetes_region_map=( ["HMD"]="us-west1-a" ["HMD_ZA-development"]="us-central1-a" ["HMD_ZA"]="europe-west2" )
 
 ################
 # CI Setup
@@ -189,9 +199,17 @@ EOF
     echo "Deploying [$PROJECT_NAME] from CircleCI to [$ENV] on [$CURRENT_CONTEXT]"
   fi
 else
-  # Running locally, so we expect this to be correct
-  GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-$(gcloud config list --format 'value(core.project)' 2>/dev/null)}
-  CURRENT_CONTEXT=$(kubectl config current-context)
+  # # Running locally, so we expect this to be correct
+  # GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-$(gcloud config list --format 'value(core.project)' 2>/dev/null)}
+  # CURRENT_CONTEXT=$(kubectl config current-context)
+  # Infering information
+  GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-"${kubernetes_project_map[$CLUSTER_REGION_ID]}"}
+  if [[ -z $kubernetes_region_map[$CLUSTER_REGION_ID-$ENV] ]]; then
+    GOOGLE_REGION="${kubernetes_region_map[$CLUSTER_REGION_ID-$ENV]}"
+  else
+    GOOGLE_REGION="${kubernetes_region_map[$CLUSTER_REGION_ID]}"
+  fi
+  CURRENT_CONTEXT="gke_${GOOGLE_PROJECT_ID}_${GOOGLE_REGION}_cluster-${ENV}"
 
   if [[ $SHOULD_USE_BASTION == "true" ]]; then
     echo "Deploying [$PROJECT_NAME] locally to [$ENV] on [$CURRENT_CONTEXT] via Bastion Host using SSH"
@@ -211,7 +229,7 @@ echo ""
 # Docker/Kustomization initial stuff
 ################
 
-GOOGLE_PROJECT_ID_DOCKER=${GOOGLE_PROJECT_ID_DOCKER:-$GOOGLE_PROJECT_ID}
+GOOGLE_PROJECT_ID_DOCKER=${GOOGLE_PROJECT_ID_DOCKER:-$MAIN_GOOGLE_PROJECT_ID}
 OVERWRITE_APP_IMAGE=${OVERWRITE_APP_IMAGE:-"true"}
 OVERWRITE_WORKER_IMAGE=${OVERWRITE_WORKER_IMAGE:-"true"}
 OVERWRITE_JOBS_IMAGES=${OVERWRITE_JOBS_IMAGES:-"true"}
