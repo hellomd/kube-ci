@@ -102,7 +102,7 @@ function create_job() {
   echo "Job found, building it: $jobname"
 
   FILE_JOB_SCHEDULE=''
-  [[ -f "$jobdir/.schedule" ]] && FILE_JOB_SCHEDULE=$(cat "$jobdir/.schedule")
+  [[ -f "$jobdir/.schedule" ]] && FILE_JOB_SCHEDULE=$(head -n 1 "$jobdir/.schedule")
 
   JOB_SCHEDULE=${FILE_JOB_SCHEDULE:-$DEFAULT_JOB_SCHEDULE}
 
