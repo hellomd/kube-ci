@@ -124,3 +124,8 @@ spec:
                 secretKeyRef:
                   name: shared-env
                   key: mailgunDomain
+            - name: MAILGUN_DOMAIN_CAMPAIGNS
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: mailgunDomainCampaigns
