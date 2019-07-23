@@ -835,6 +835,14 @@ if [[ $SHOULD_USE_BASTION == "true" ]]; then
   echo "Removing $BASTION_KUBE_DIR directory on Bastion Host."
   gcloud_ssh_bastion --command "rm -rf $BASTION_KUBE_DIR"
   echo ""
+
+  echo "Removing ssh keys from CircleCI OS-Login profile to not hit 32 KiB profile limit"
+
+  # could also use sed 1d to delete first line
+  for i in $(gcloud compute os-login ssh-keys list | tail -n +2); do
+    echo $i
+    gcloud compute os-login ssh-keys remove --key $i
+  done
 fi
 
 echo ""
