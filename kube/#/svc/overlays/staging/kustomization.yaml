@@ -4,5 +4,5 @@ bases:
 commonLabels:
   # app-variant: staging
 
-patches:
+patchesStrategicMerge:
   - pod-cpu-limit.yaml

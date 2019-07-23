@@ -4,5 +4,5 @@ bases:
 commonLabels:
   worker-variant: development
 
-patches:
+patchesStrategicMerge:
   - pod-cpu-limit.yaml

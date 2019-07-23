@@ -1,5 +1,5 @@
 bases:
   - ../../../#/svc/overlays/$ENV
 
-patches:
+patchesStrategicMerge:
   - env-vars.yaml
