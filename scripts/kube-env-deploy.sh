@@ -90,7 +90,7 @@ function gcloud_scp_to_bastion() {
 
 # Right now only hmd.za#production is using bastion
 SHOULD_USE_BASTION="false"
-if [[ $ENV == "production" && $CLUSTER_REGION_ID_PATH == "hmd.za" ]]; then
+if [[ $CLUSTER_REGION_ID_PATH == "hmd.za" ]]; then
   SHOULD_USE_BASTION="true"
 fi
 
@@ -101,7 +101,7 @@ fi
 # This is used when running locally to identify the correct gcloud project id and kubernetes context
 #  Instead of relying on it being correct on the developer machine
 declare -A kubernetes_project_map=( ["HMD"]="hellomd-181719" ["HMD_ZA"]="hellomd-za" )
-declare -A kubernetes_region_map=( ["HMD"]="us-west1-a" ["HMD_ZA-development"]="us-central1-a" ["HMD_ZA"]="europe-west2" )
+declare -A kubernetes_region_map=( ["HMD"]="us-west1-a" ["HMD-development"]="us-central1-a" ["HMD_ZA"]="europe-west2" ["HMD_ZA-staging"]="europe-west2-a" )
 
 ################
 # CI Setup
@@ -199,17 +199,18 @@ EOF
     echo "Deploying [$PROJECT_NAME] from CircleCI to [$ENV] on [$CURRENT_CONTEXT]"
   fi
 else
-  # # Running locally, so we expect this to be correct
+  #  Running locally, so we are getting the values based on the params and the current environment:
   # GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-$(gcloud config list --format 'value(core.project)' 2>/dev/null)}
   # CURRENT_CONTEXT=$(kubectl config current-context)
-  # Infering information
   GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-"${kubernetes_project_map[$CLUSTER_REGION_ID]}"}
-  if [[ -z $kubernetes_region_map[$CLUSTER_REGION_ID-$ENV] ]]; then
-    GOOGLE_REGION="${kubernetes_region_map[$CLUSTER_REGION_ID-$ENV]}"
+  if [[ -n "${kubernetes_region_map[$CLUSTER_REGION_ID-$ENV]}" ]]; then
+    COMPUTE_ZONE="${kubernetes_region_map[$CLUSTER_REGION_ID-$ENV]}"
   else
-    GOOGLE_REGION="${kubernetes_region_map[$CLUSTER_REGION_ID]}"
+    COMPUTE_ZONE="${kubernetes_region_map[$CLUSTER_REGION_ID]}"
   fi
-  CURRENT_CONTEXT="gke_${GOOGLE_PROJECT_ID}_${GOOGLE_REGION}_cluster-${ENV}"
+  CLUSTER="cluster-${ENV}"
+
+  CURRENT_CONTEXT="gke_${GOOGLE_PROJECT_ID}_${COMPUTE_ZONE}_${CLUSTER}"
 
   if [[ $SHOULD_USE_BASTION == "true" ]]; then
     echo "Deploying [$PROJECT_NAME] locally to [$ENV] on [$CURRENT_CONTEXT] via Bastion Host using SSH"
@@ -218,7 +219,19 @@ else
     echo "Make sure you have logged over SSH"
     echo " to the bastion host atleast one time before and "
     echo " logged on your account using \`gcloud auth login\`"
+    echo ""
+    echo "Loading Bastion..."
+    gcloud_ssh_bastion -- /bin/bash << EOF
+      gcloud --quiet container clusters get-credentials \
+        --project $GOOGLE_PROJECT_ID \
+        --zone $COMPUTE_ZONE \
+        $CLUSTER
+EOF
   else
+    gcloud --quiet config set project $GOOGLE_PROJECT_ID
+    gcloud --quiet config set compute/zone $COMPUTE_ZONE
+    gcloud --quiet config set container/cluster $CLUSTER
+    gcloud --quiet container clusters get-credentials $CLUSTER
     echo "Deploying [$PROJECT_NAME] locally to [$ENV] on [$CURRENT_CONTEXT]"
   fi
 fi
