@@ -1,0 +1,12 @@
+bases:
+  - ../../../#/svc/overlays/$ENV
+
+commonLabels:
+  hellomd/kind: microservice
+  hellomd/library: koa
+  hellomd/language: nodejs
+  app: $PROJECT_NAME
+
+patchesStrategicMerge:
+  - svc-deployment.yaml
+  - svc-service.yaml
