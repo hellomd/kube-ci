@@ -34,7 +34,7 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 # Install Kustomize
 ENV KUSTOMIZE_VERSION "v3.3.0"
 RUN filename="kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" && \
-  wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/$filename && \
+  curl -O https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/$filename && \
   tar xzvf $filename && \
   mv ./kustomize /usr/local/bin/kustomize && \
   kustomize version
