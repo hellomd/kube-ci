@@ -1,0 +1,8 @@
+bases:
+  - ../../base
+
+commonLabels:
+  hellomd/environment: production
+
+patchesStrategicMerge:
+  - svc-deployment.yaml
