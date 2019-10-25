@@ -114,6 +114,11 @@ spec:
                   name: shared-env
                   key: mongoUrl
             # Mailing
+            - name: SENDGRID_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: sendgridApiKey
             - name: MAILGUN_API_KEY
               valueFrom:
                 secretKeyRef:
