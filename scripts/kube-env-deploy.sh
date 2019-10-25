@@ -94,14 +94,13 @@ if [[ $CLUSTER_REGION_ID_PATH == "hmd.za" ]]; then
   SHOULD_USE_BASTION="true"
 fi
 
-
 ################
 # Development Setup
 ################
 # This is used when running locally to identify the correct gcloud project id and kubernetes context
 #  Instead of relying on it being correct on the developer machine
-declare -A kubernetes_project_map=( ["HMD"]="hellomd-181719" ["HMD_ZA"]="hellomd-za" ["LOL_LLAMA"]="lol-llama" )
-declare -A kubernetes_region_map=( ["HMD"]="us-west1-a" ["HMD-development"]="us-central1-a" ["HMD_ZA"]="europe-west2" ["LOL_LLAMA"]="us-west1-a" )
+declare -A kubernetes_project_map=(["HMD"]="hellomd-181719" ["HMD_ZA"]="hellomd-za" ["LOL_LLAMA"]="lol-llama")
+declare -A kubernetes_region_map=(["HMD"]="us-west1-a" ["HMD-development"]="us-central1-a" ["HMD_ZA"]="europe-west2" ["HMD_ZA-staging"]="europe-west2-a" ["LOL_LLAMA"]="us-west1-a")
 
 ################
 # CI Setup
@@ -119,21 +118,20 @@ if [[ ! -z "$IS_CI" ]]; then
 
   CLUSTER_REGION_CLUSTER_NAME_VAR_PRODUCTION="${CLUSTER_REGION_CLUSTER_NAME_VAR}_PRODUCTION"
   CLUSTER_REGION_COMPUTE_ZONE_VAR_PRODUCTION="${CLUSTER_REGION_COMPUTE_ZONE_VAR}_PRODUCTION"
-  CLUSTER_REGION_CLUSTER_NAME_VAR_STAGING="${CLUSTER_REGION_CLUSTER_NAME_VAR}_STAGING"
-  CLUSTER_REGION_COMPUTE_ZONE_VAR_STAGING="${CLUSTER_REGION_COMPUTE_ZONE_VAR}_STAGING"
+  # CLUSTER_REGION_CLUSTER_NAME_VAR_STAGING="${CLUSTER_REGION_CLUSTER_NAME_VAR}_STAGING"
+  # CLUSTER_REGION_COMPUTE_ZONE_VAR_STAGING="${CLUSTER_REGION_COMPUTE_ZONE_VAR}_STAGING"
   CLUSTER_REGION_CLUSTER_NAME_VAR_DEVELOPMENT="${CLUSTER_REGION_CLUSTER_NAME_VAR}_DEVELOPMENT"
   CLUSTER_REGION_COMPUTE_ZONE_VAR_DEVELOPMENT="${CLUSTER_REGION_COMPUTE_ZONE_VAR}_DEVELOPMENT"
 
-  for required_env in \
-    $CLUSTER_REGION_AUTH_VAR \
-    $CLUSTER_REGION_PROJECT_ID_VAR \
-    $CLUSTER_REGION_CLUSTER_NAME_VAR_PRODUCTION \
-    $CLUSTER_REGION_COMPUTE_ZONE_VAR_PRODUCTION \
-    # Staging disabled temporarily
-    # $CLUSTER_REGION_CLUSTER_NAME_VAR_STAGING \
-    # $CLUSTER_REGION_COMPUTE_ZONE_VAR_STAGING \
-    $CLUSTER_REGION_CLUSTER_NAME_VAR_DEVELOPMENT \
-    $CLUSTER_REGION_COMPUTE_ZONE_VAR_DEVELOPMENT; do
+  # Those are optional since we are now falling back to the ones without the region prefix
+  # $CLUSTER_REGION_AUTH_VAR \
+  # $CLUSTER_REGION_CLUSTER_NAME_VAR_PRODUCTION \
+  # $CLUSTER_REGION_COMPUTE_ZONE_VAR_PRODUCTION \
+  # $CLUSTER_REGION_CLUSTER_NAME_VAR_STAGING \
+  # $CLUSTER_REGION_COMPUTE_ZONE_VAR_STAGING \
+  # $CLUSTER_REGION_CLUSTER_NAME_VAR_DEVELOPMENT \
+  # $CLUSTER_REGION_COMPUTE_ZONE_VAR_DEVELOPMENT \
+  for required_env in $CLUSTER_REGION_PROJECT_ID_VAR; do
     if [ -z "${!required_env}" ]; then
       missing_required_env=true
       echo "$required_env is not set" 1>&2
@@ -142,14 +140,15 @@ if [[ ! -z "$IS_CI" ]]; then
 
   [[ $missing_required_env == "true" ]] && echo "Missing required environment variables, cannot continue" 1>&2 && exit 1
 
-  GOOGLE_AUTH="${!CLUSTER_REGION_AUTH_VAR}"
   GOOGLE_PROJECT_ID="${!CLUSTER_REGION_PROJECT_ID_VAR}"
-  GOOGLE_CLUSTER_NAME_PRODUCTION="${!CLUSTER_REGION_CLUSTER_NAME_VAR_PRODUCTION}"
-  GOOGLE_COMPUTE_ZONE_PRODUCTION="${!CLUSTER_REGION_COMPUTE_ZONE_VAR_PRODUCTION}"
-  GOOGLE_CLUSTER_NAME_STAGING="${!CLUSTER_REGION_CLUSTER_NAME_VAR_STAGING}"
-  GOOGLE_COMPUTE_ZONE_STAGING="${!CLUSTER_REGION_COMPUTE_ZONE_VAR_STAGING}"
-  GOOGLE_CLUSTER_NAME_DEVELOPMENT="${!CLUSTER_REGION_CLUSTER_NAME_VAR_DEVELOPMENT}"
-  GOOGLE_COMPUTE_ZONE_DEVELOPMENT="${!CLUSTER_REGION_COMPUTE_ZONE_VAR_DEVELOPMENT}"
+
+  if [ -n "${!CLUSTER_REGION_AUTH_VAR}"];                     then GOOGLE_AUTH="${!CLUSTER_REGION_AUTH_VAR}";                                         fi
+  if [ -n "${!CLUSTER_REGION_CLUSTER_NAME_VAR_PRODUCTION}"];  then GOOGLE_CLUSTER_NAME_PRODUCTION="${!CLUSTER_REGION_CLUSTER_NAME_VAR_PRODUCTION}";   fi
+  if [ -n "${!CLUSTER_REGION_COMPUTE_ZONE_VAR_PRODUCTION}"];  then GOOGLE_COMPUTE_ZONE_PRODUCTION="${!CLUSTER_REGION_COMPUTE_ZONE_VAR_PRODUCTION}";   fi
+  if [ -n "${!CLUSTER_REGION_CLUSTER_NAME_VAR_STAGING}"];     then GOOGLE_CLUSTER_NAME_STAGING="${!CLUSTER_REGION_CLUSTER_NAME_VAR_STAGING}";         fi
+  if [ -n "${!CLUSTER_REGION_COMPUTE_ZONE_VAR_STAGING}"];     then GOOGLE_COMPUTE_ZONE_STAGING="${!CLUSTER_REGION_COMPUTE_ZONE_VAR_STAGING}";         fi
+  if [ -n "${!CLUSTER_REGION_CLUSTER_NAME_VAR_DEVELOPMENT}"]; then GOOGLE_CLUSTER_NAME_DEVELOPMENT="${!CLUSTER_REGION_CLUSTER_NAME_VAR_DEVELOPMENT}"; fi
+  if [ -n "${!CLUSTER_REGION_COMPUTE_ZONE_VAR_DEVELOPMENT}"]; then GOOGLE_COMPUTE_ZONE_DEVELOPMENT="${!CLUSTER_REGION_COMPUTE_ZONE_VAR_DEVELOPMENT}"; fi
 
   case "$ENV" in
   "production")
@@ -182,7 +181,7 @@ if [[ ! -z "$IS_CI" ]]; then
 
   # if remote, we also need to configure gcloud there
   if [[ $SHOULD_USE_BASTION == "true" ]]; then
-    gcloud_ssh_bastion -- /bin/bash << EOF
+    gcloud_ssh_bastion -- /bin/bash <<EOF
       if [[ ! -f ~/gcp-key.json ]]; then
         echo "${GOOGLE_AUTH}" | base64 -i --decode >~/gcp-key.json
         gcloud auth activate-service-account --key-file ~/gcp-key.json
@@ -204,8 +203,8 @@ else
   # GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-$(gcloud config list --format 'value(core.project)' 2>/dev/null)}
   # CURRENT_CONTEXT=$(kubectl config current-context)
   GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-"${kubernetes_project_map[$CLUSTER_REGION_ID]}"}
-  if [[ -n "${kubernetes_region_map[$CLUSTER_REGION_ID-$ENV]}" ]]; then
-    COMPUTE_ZONE="${kubernetes_region_map[$CLUSTER_REGION_ID-$ENV]}"
+  if [[ -n "${kubernetes_region_map[$CLUSTER_REGION_ID - $ENV]}" ]]; then
+    COMPUTE_ZONE="${kubernetes_region_map[$CLUSTER_REGION_ID - $ENV]}"
   else
     COMPUTE_ZONE="${kubernetes_region_map[$CLUSTER_REGION_ID]}"
   fi
@@ -222,7 +221,7 @@ else
     echo " logged on your account using \`gcloud auth login\`"
     echo ""
     echo "Loading Bastion..."
-    gcloud_ssh_bastion -- /bin/bash << EOF
+    gcloud_ssh_bastion -- /bin/bash <<EOF
       gcloud --quiet container clusters get-credentials \
         --project $GOOGLE_PROJECT_ID \
         --zone $COMPUTE_ZONE \
@@ -491,7 +490,7 @@ if [[ -z ${SKIP_IMAGE_BUILD+x} ]]; then
       if [[ "$OVERWRITE_APP_IMAGE" == "true" || $(curl -H "Authorization: Bearer $GCR_TOKEN" --fail https://us.gcr.io/v2/$GOOGLE_PROJECT_ID_DOCKER/$APP_IMAGE_NAME_ONLY/manifests/$IMAGES_TAG 2>/dev/null) == "" ]]; then
         [[ "$OVERWRITE_APP_IMAGE" == "true" ]] && echo "Overwriting existing image at \"$APP_IMAGE\" if any"
 
-        if [[ "$(docker images -q prebuilt-main-image 2> /dev/null)" != "" ]]; then
+        if [[ "$(docker images -q prebuilt-main-image 2>/dev/null)" != "" ]]; then
           echo "Prebuilt main image found, just tagging it"
           $debug docker tag prebuilt-main-image $APP_IMAGE
         else
@@ -568,15 +567,15 @@ function add_env_vars() {
   # svc
   echo "adding .env.yaml envs to base svc definitions"
   jq '.[0].spec.template.spec.containers[0].env=(.[1]+.[0].spec.template.spec.containers[0].env | unique_by(.name)) | .[0]' \
-    -s <(echo "$svc_json") <(echo "$env_json") | yq r - > $svc_file
+    -s <(echo "$svc_json") <(echo "$env_json") | yq r - >$svc_file
   # worker
   echo "adding .env.yaml envs to base worker definitions"
   jq '.[0].spec.template.spec.containers[0].env=(.[1]+.[0].spec.template.spec.containers[0].env | unique_by(.name)) | .[0]' \
-    -s <(echo "$worker_json") <(echo "$env_json") | yq r - > $worker_file
+    -s <(echo "$worker_json") <(echo "$env_json") | yq r - >$worker_file
   # jobs
   echo "adding .env.yaml envs to base jobs definitions"
   jq '.[0].spec.jobTemplate.spec.template.spec.containers[0].env=(.[1]+.[0].spec.jobTemplate.spec.template.spec.containers[0].env | unique_by(.name)) | .[0]' \
-    -s <(echo "$jobs_json") <(echo "$env_json") | yq r - > $jobs_file
+    -s <(echo "$jobs_json") <(echo "$env_json") | yq r - >$jobs_file
 }
 
 if [ -f "$projectdir/kube.out/#/.env.yaml" ]; then
@@ -738,12 +737,12 @@ if [[ $has_jobs_folder == "true" ]]; then
   $currentdir/create-jobs.sh -j $(readlink -f ./jobs) -i $CRONJOBS_DEFAULT_IMAGE -b $kustomize_jobs_project_folder "${args[@]}"
 
   echo ""
-  
+
   echo "Done with cronjobs for project [$PROJECT_NAME]"
 else
   echo "No cronjobs for project [$PROJECT_NAME]"
 fi
-  
+
 echo ""
 echo ""
 
@@ -783,7 +782,7 @@ function create_configmap() {
       tar cf - -C $full_file_path . | gcloud_ssh_bastion -- 'D=`mktemp -d`; tar xf - -C $D; echo $(readlink -f $D); ls -al $D; kubectl create configmap '"$1"' --from-file=$D --dry-run --save-config -o yaml | kubectl apply -f -'
     else
       echo "Error running create_configmap, $full_file_path is not a file or directory. Bailing out"
-      exit 1  
+      exit 1
     fi
   else
     kubectl create configmap $1 --from-file=$2 --dry-run --save-config -o yaml | kubectl apply -f -
