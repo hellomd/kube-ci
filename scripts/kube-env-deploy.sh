@@ -101,7 +101,7 @@ fi
 # This is used when running locally to identify the correct gcloud project id and kubernetes context
 #  Instead of relying on it being correct on the developer machine
 declare -A kubernetes_project_map=( ["HMD"]="hellomd-181719" ["HMD_ZA"]="hellomd-za" ["LOL_LLAMA"]="lol-llama" )
-declare -A kubernetes_region_map=( ["HMD"]="us-west1-a" ["HMD-development"]="us-central1-a" ["HMD_ZA"]="europe-west2" ["HMD_ZA-staging"]="europe-west2-a" ["LOL_LLAMA"]="us-west1-a" )
+declare -A kubernetes_region_map=( ["HMD"]="us-west1-a" ["HMD-development"]="us-central1-a" ["HMD_ZA"]="europe-west2" ["LOL_LLAMA"]="us-west1-a" )
 
 ################
 # CI Setup
@@ -129,8 +129,9 @@ if [[ ! -z "$IS_CI" ]]; then
     $CLUSTER_REGION_PROJECT_ID_VAR \
     $CLUSTER_REGION_CLUSTER_NAME_VAR_PRODUCTION \
     $CLUSTER_REGION_COMPUTE_ZONE_VAR_PRODUCTION \
-    $CLUSTER_REGION_CLUSTER_NAME_VAR_STAGING \
-    $CLUSTER_REGION_COMPUTE_ZONE_VAR_STAGING \
+    # Staging disabled temporarily
+    # $CLUSTER_REGION_CLUSTER_NAME_VAR_STAGING \
+    # $CLUSTER_REGION_COMPUTE_ZONE_VAR_STAGING \
     $CLUSTER_REGION_CLUSTER_NAME_VAR_DEVELOPMENT \
     $CLUSTER_REGION_COMPUTE_ZONE_VAR_DEVELOPMENT; do
     if [ -z "${!required_env}" ]; then
