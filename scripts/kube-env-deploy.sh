@@ -71,7 +71,7 @@ shift $((OPTIND - 1))
 
 # Cluster region is a string
 CLUSTER_REGION_ID_PATH=$(echo "$CLUSTER_REGION_ID" | awk '{ print tolower($0) }')
-CLUSTER_REGION_ID=$(printf '%s\n' "$CLUSTER_REGION_ID" | awk '{ print toupper($0) }' | sed "s/\./_/g")
+CLUSTER_REGION_ID=$(printf '%s\n' "$CLUSTER_REGION_ID" | awk '{ print toupper($0) }' | sed "s/[\.\-]/_/g")
 
 ################
 # Bastion Setup
@@ -100,8 +100,8 @@ fi
 ################
 # This is used when running locally to identify the correct gcloud project id and kubernetes context
 #  Instead of relying on it being correct on the developer machine
-declare -A kubernetes_project_map=( ["HMD"]="hellomd-181719" ["HMD_ZA"]="hellomd-za" ["LOL-LLAMA"]="lol-llama" )
-declare -A kubernetes_region_map=( ["HMD"]="us-west1-a" ["HMD-development"]="us-central1-a" ["HMD_ZA"]="europe-west2" ["HMD_ZA-staging"]="europe-west2-a" ["LOL-LLAMA"]="us-west1-a" )
+declare -A kubernetes_project_map=( ["HMD"]="hellomd-181719" ["HMD_ZA"]="hellomd-za" ["LOL_LLAMA"]="lol-llama" )
+declare -A kubernetes_region_map=( ["HMD"]="us-west1-a" ["HMD-development"]="us-central1-a" ["HMD_ZA"]="europe-west2" ["HMD_ZA-staging"]="europe-west2-a" ["LOL_LLAMA"]="us-west1-a" )
 
 ################
 # CI Setup
