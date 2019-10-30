@@ -4,6 +4,9 @@ metadata:
   name: $PROJECT_NAME
 spec:
   template:
+    metadata:
+      annotations:
+        hellomd/logging.enabled: "false"
     spec:
       containers:
         - name: main
@@ -23,3 +26,29 @@ spec:
             - name: MAILGUN_DOMAIN
               valueFrom: null
               value: "NOT_SET"
+            # Postgres
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: pgHost
+            - name: PGPORT
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: pgPort
+            - name: PGDATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: pgDatabase
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: pgUser
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shared-env
+                  key: pgPassword
