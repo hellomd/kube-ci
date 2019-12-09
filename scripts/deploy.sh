@@ -8,11 +8,12 @@ set -eo pipefail
 ################
 # Same than kube-env-deploy.sh one
 usage() {
-  echo "Usage: $0 [-n <project-name>] [-r <region>] [-e <production|staging|development>] [-d enable debug or not]" 1>&2
+  echo "Usage: $0 [-n <project-name>] [-r <region>] [-e <production|staging|development>] [-p path to docker context] [-d enable debug or not]" 1>&2
   echo "" 1>&2
   echo "-n defaults to \$CIRCLE_PROJECT_REPONAME, if that is not set, to the basename of the current directory" 1>&2
   echo "-r defaults to \$CLUSTER_REGION_ID, if that is not set, it will default to our main one, hmd" 1>&2
   echo "-e defaults to development" 1>&2
+  echo "-p defaults to current directory" 1>&2
   echo "-d debug mode, disabled by default" 1>&2
   exit 1
 }
@@ -26,10 +27,12 @@ ENV=development
 CLUSTER_REGION_ID=${CLUSTER_REGION_ID:-hmd}
 # Project name is the repo name on GitHub or the current folder name if deploying locally
 PROJECT_NAME=${CIRCLE_PROJECT_REPONAME:-$(basename $projectdir)}
+# Path to use as Docker context when building images
+DOCKER_CONTEXT_PATH=${DOCKER_CONTEXT_PATH:-.}
 
 child_args=()
 
-while getopts ":n:r:e:d" name; do
+while getopts ":n:r:e:p:d" name; do
   case "${name}" in
   n)
     PROJECT_NAME=${OPTARG}
@@ -42,6 +45,9 @@ while getopts ":n:r:e:d" name; do
     if ! [[ "$ENV" =~ ^(development|staging|production)$ ]]; then
       usage
     fi
+    ;;
+  p)
+    DOCKER_CONTEXT_PATH=${OPTARG}
     ;;
   d)
     child_args+=("-d")
@@ -60,9 +66,9 @@ for region in "${cluster_regions[@]}"; do
   printf "# DEPLOYING TO ${ENV^^} ON %-32s #\n" ${region^^}
   echo "################################################################"
   echo ""
-  echo "Running: $currentdir/kube-env-deploy.sh -e $ENV -r $region" "${child_args[@]}"
+  echo "Running: $currentdir/kube-env-deploy.sh -e $ENV -r $region" -d "${DOCKER_CONTEXT_PATH}" "${child_args[@]}"
   echo " - - - - - - - - - - - - - - - - - - - - - - "
-  $currentdir/kube-env-deploy.sh -n $PROJECT_NAME -r $region -e $ENV "${child_args[@]}"
+  $currentdir/kube-env-deploy.sh -n $PROJECT_NAME -r $region -e $ENV -p $DOCKER_CONTEXT_PATH "${child_args[@]}"
   echo ""
   echo " - - - - - - - - - - - - - - - - - - - - - - "
   echo ""

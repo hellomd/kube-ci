@@ -12,6 +12,7 @@ usage() {
   echo "- GOOGLE_PROJECT_ID_DOCKER" 1>&2
   echo "- PROJECT_NAME" 1>&2
   echo "- ENV" 1>&2
+  echo "- DOCKER_CONTEXT_PATH" 1>&2
   echo "- COMMIT_SHA1" 1>&2
   echo "- CLUSTER_REGION_ID" 1>&2
   echo "- CLUSTER_REGION_ID_PATH" 1>&2

@@ -13,11 +13,12 @@ function debug_cmd() {
 # Initial setup
 ################
 usage() {
-  echo "Usage: $0 [-n <project-name>] [-r <region>] [-e <production|staging|development>] [-d enable debug or not]" 1>&2
+  echo "Usage: $0 [-n <project-name>] [-r <region>] [-e <production|staging|development>] [-p path to docker context] [-d enable debug or not]" 1>&2
   echo "" 1>&2
   echo "-n defaults to \$CIRCLE_PROJECT_REPONAME, if that is not set, to the basename of the current directory" 1>&2
   echo "-r defaults to \$CLUSTER_REGION_ID, if that is not set, it will default to our main one, hmd" 1>&2
   echo "-e defaults to development" 1>&2
+  echo "-p defaults to current directory" 1>&2
   echo "-d debug mode, disabled by default" 1>&2
   exit 1
 }
@@ -41,11 +42,13 @@ PROJECT_NAME=${CIRCLE_PROJECT_REPONAME:-$(basename $projectdir)}
 COMMIT_SHA1=${CIRCLE_SHA1:-$(git rev-parse HEAD)}
 # Are we on CI?
 IS_CI=${CIRCLECI:-}
+# Path to use as Docker context when building images
+DOCKER_CONTEXT_PATH=${DOCKER_CONTEXT_PATH:-.}
 
 # Docker stuff
 IMAGES_TAG=${IMAGES_TAG:-$COMMIT_SHA1}
 
-while getopts ":n:r:e:d" name; do
+while getopts ":n:r:e:p:d" name; do
   case "${name}" in
   n)
     PROJECT_NAME=${OPTARG}
@@ -59,6 +62,9 @@ while getopts ":n:r:e:d" name; do
       usage
     fi
     ;;
+  p)
+    DOCKER_CONTEXT_PATH=${OPTARG}
+    ;;
   d)
     debug=debug_cmd
     ;;
@@ -68,6 +74,8 @@ while getopts ":n:r:e:d" name; do
   esac
 done
 shift $((OPTIND - 1))
+
+DOCKER_CONTEXT_PATH=$(realpath $DOCKER_CONTEXT_PATH)
 
 # Cluster region is a string
 CLUSTER_REGION_ID_PATH=$(echo "$CLUSTER_REGION_ID" | awk '{ print tolower($0) }')
@@ -266,6 +274,7 @@ echo "Cluster Region: $CLUSTER_REGION_ID"
 echo "currentdir: " $currentdir
 echo "kuberootdir: " $kuberootdir
 echo "projectdir: " $projectdir
+echo "docker context path: " $DOCKER_CONTEXT_PATH
 
 echo ""
 printf "debug? "
@@ -495,7 +504,7 @@ if [[ -z ${SKIP_IMAGE_BUILD+x} ]]; then
           $debug docker tag prebuilt-main-image $APP_IMAGE
         else
           echo "Starting main Dockerfile build"
-          $debug docker build -t $APP_IMAGE .
+          $debug docker build -t $APP_IMAGE -f $PROJECT_DOCKERFILE_MAIN $DOCKER_CONTEXT_PATH
         fi
 
         echo "Pushing built main docker image to GCR."
@@ -514,7 +523,7 @@ if [[ -z ${SKIP_IMAGE_BUILD+x} ]]; then
         [[ "$OVERWRITE_WORKER_IMAGE" == "true" ]] && echo "Overwriting existing image at \"$WORKER_IMAGE\" if any"
 
         echo "Starting worker Dockerfile build"
-        $debug docker build -t $WORKER_IMAGE -f Dockerfile.cron .
+        $debug docker build -t $WORKER_IMAGE -f $PROJECT_DOCKERFILE_WORKER $DOCKER_CONTEXT_PATH
 
         echo "Pushing built worker docker image to GCR."
         $debug docker push $WORKER_IMAGE
@@ -648,6 +657,7 @@ echo ""
 
 # Export required vars for subshells
 export ENV=$ENV
+export DOCKER_CONTEXT_PATH=$DOCKER_CONTEXT_PATH
 export CLUSTER_REGION_ID=$CLUSTER_REGION_ID
 export CLUSTER_REGION_ID_PATH=$CLUSTER_REGION_ID_PATH
 export COMMIT_SHA1=$COMMIT_SHA1
