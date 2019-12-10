@@ -1,24 +1,29 @@
-FROM node:10.15.3 as node
+FROM node:12-stretch as node
 FROM golang:1.12.4-stretch as go
-FROM google/cloud-sdk:245.0.0
+FROM google/cloud-sdk:273.0.0
 
 RUN mkdir -p /opt
 
-RUN \
-  apt-get update \
+# RUN apt-get update \
+#   && apt-get -y install software-properties-common \
+#   && apt-add-repository ppa:git-core/ppa -y
+
+RUN apt-get update \
   # jq is for json manipulation 
-  && apt-get -y install gettext-base jq \
+  && apt-get -y install gettext-base jq git \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+RUN git --version
+
 # Install linkerd and update path
-ENV LINKERD2_VERSION stable-2.3.0
+ENV LINKERD2_VERSION stable-2.6.0
 RUN curl -sL https://run.linkerd.io/install | sh
 ENV PATH="${PATH}:/root/.linkerd2/bin"
 
 # Node.js
-## Must match same at https://github.com/nodejs/docker-node/blob/master/10/stretch/Dockerfile#L44
-ENV YARN_VERSION 1.13.0
+## Must match same at https://github.com/nodejs/docker-node/blob/master/12/stretch/Dockerfile#L45
+ENV YARN_VERSION 1.19.1
 
 COPY --from=node /opt/yarn-v$YARN_VERSION /opt/yarn-v$YARN_VERSION
 COPY --from=node /usr/local/bin/node /usr/local/bin/npm /usr/local/bin/
@@ -41,11 +46,16 @@ RUN filename="kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" && \
   kustomize version
 
 # Install yq
-RUN \
-  go get \
-    # yq - yaml processing
-    gopkg.in/mikefarah/yq.v2 \
-  && ln -s $GOPATH/bin/yq.v2 /usr/local/bin/yq
+ENV YQ2_VERSION="2.4.1"
+RUN curl -OL "https://github.com/mikefarah/yq/releases/download/${YQ2_VERSION}/yq_linux_amd64" \
+    && chmod a+x ./yq_linux_amd64 \
+    && ln ./yq_linux_amd64 /usr/local/bin/yq \
+    && yq --version
+# RUN \
+#   GO111MODULE=on  go get \
+#     # yq - yaml processing
+#     gopkg.in/mikefarah/yq.v2 \
+#   && ln -s $GOPATH/bin/yq.v2 /usr/local/bin/yq
 
 # Legacy scripts
 COPY legacy/ /scripts/
