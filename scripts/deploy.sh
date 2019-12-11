@@ -10,7 +10,7 @@ set -eo pipefail
 usage() {
   echo "Usage: $0 [-n <project-name>] [-r <region>] [-e <production|staging|development>] [-p path to docker context] [-d enable debug or not]" 1>&2
   echo "" 1>&2
-  echo "-n defaults to \$CIRCLE_PROJECT_REPONAME, if that is not set, to the basename of the current directory" 1>&2
+  echo "-n defaults to \$PROJECT_NAME, if that is not set, to the basename of the current directory" 1>&2
   echo "-r defaults to \$CLUSTER_REGION_ID, if that is not set, it will default to our main one, hmd" 1>&2
   echo "-e defaults to development" 1>&2
   echo "-p defaults to current directory" 1>&2
@@ -26,7 +26,7 @@ ENV=development
 # cluster identifier
 CLUSTER_REGION_ID=${CLUSTER_REGION_ID:-hmd}
 # Project name is the repo name on GitHub or the current folder name if deploying locally
-PROJECT_NAME=${CIRCLE_PROJECT_REPONAME:-$(basename $projectdir)}
+PROJECT_NAME=${PROJECT_NAME:-$(basename $projectdir)}
 # Path to use as Docker context when building images
 DOCKER_CONTEXT_PATH=${DOCKER_CONTEXT_PATH:-.}
 

@@ -15,7 +15,7 @@ function debug_cmd() {
 usage() {
   echo "Usage: $0 [-n <project-name>] [-r <region>] [-e <production|staging|development>] [-p path to docker context] [-d enable debug or not]" 1>&2
   echo "" 1>&2
-  echo "-n defaults to \$CIRCLE_PROJECT_REPONAME, if that is not set, to the basename of the current directory" 1>&2
+  echo "-n defaults to \$PROJECT_NAME, if that is not set, to the basename of the current directory" 1>&2
   echo "-r defaults to \$CLUSTER_REGION_ID, if that is not set, it will default to our main one, hmd" 1>&2
   echo "-e defaults to development" 1>&2
   echo "-p defaults to current directory" 1>&2
@@ -37,11 +37,12 @@ ENV=development
 CLUSTER_REGION_ID=${CLUSTER_REGION_ID:-hmd}
 MAIN_GOOGLE_PROJECT_ID="hellomd-181719"
 # Project name is the repo name on GitHub or the current folder name if deploying locally
-PROJECT_NAME=${CIRCLE_PROJECT_REPONAME:-$(basename $projectdir)}
+PROJECT_NAME=${PROJECT_NAME:-$(basename $projectdir)}
 # Get commit from CircleCI or git sha
-COMMIT_SHA1=${CIRCLE_SHA1:-$(git rev-parse HEAD)}
+COMMIT_SHA1=${COMMIT_SHA1:-$(git rev-parse HEAD)}
 # Are we on CI?
-IS_CI=${CIRCLECI:-}
+IS_CI=${IS_CI:-}
+BUILD_NUM=${BUILD_NUM:-}
 # Path to use as Docker context when building images
 DOCKER_CONTEXT_PATH=${DOCKER_CONTEXT_PATH:-.}
 
@@ -113,7 +114,7 @@ declare -A kubernetes_region_map=(["HMD"]="us-west1-a" ["HMD-development"]="us-c
 ################
 # CI Setup
 ################
-# We only want to run login stuff if running on CIRCLECI
+# We only want to run login stuff if running on CI
 if [[ ! -z "$IS_CI" ]]; then
 
   missing_required_env=false
@@ -761,7 +762,7 @@ echo ""
 ##############
 if [[ $SHOULD_USE_BASTION == "true" ]]; then
   if [[ $IS_CI == "true" ]]; then
-    BASTION_KUBE_DIR="~/kube/manifests/${PROJECT_NAME}/${ENV}/build-${CIRCLE_BUILD_NUM}"
+    BASTION_KUBE_DIR="~/kube/manifests/${PROJECT_NAME}/${ENV}/build-${BUILD_NUM}"
   else
     BASTION_KUBE_DIR="~/kube/manifests/${PROJECT_NAME}/${ENV}"
   fi
