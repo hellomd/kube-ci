@@ -66,7 +66,7 @@ for region in "${cluster_regions[@]}"; do
   printf "# DEPLOYING TO ${ENV^^} ON %-32s #\n" ${region^^}
   echo "################################################################"
   echo ""
-  echo "Running: $currentdir/kube-env-deploy.sh -e $ENV -r $region" -d "${DOCKER_CONTEXT_PATH}" "${child_args[@]}"
+  echo "Running: $currentdir/kube-env-deploy.sh -e $ENV -r $region" -d "${DOCKER_CONTEXT_PATH}" -p $DOCKER_CONTEXT_PATH "${child_args[@]}"
   echo " - - - - - - - - - - - - - - - - - - - - - - "
   $currentdir/kube-env-deploy.sh -n $PROJECT_NAME -r $region -e $ENV -p $DOCKER_CONTEXT_PATH "${child_args[@]}"
   echo ""
