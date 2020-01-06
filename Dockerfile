@@ -1,4 +1,4 @@
-FROM node:12-stretch as node
+FROM node:12.14.0-stretch as node
 FROM golang:1.12.4-stretch as go
 FROM google/cloud-sdk:273.0.0
 
@@ -23,7 +23,7 @@ ENV PATH="${PATH}:/root/.linkerd2/bin"
 
 # Node.js
 ## Must match same at https://github.com/nodejs/docker-node/blob/master/12/stretch/Dockerfile#L45
-ENV YARN_VERSION 1.19.1
+ENV YARN_VERSION 1.21.1
 
 COPY --from=node /opt/yarn-v$YARN_VERSION /opt/yarn-v$YARN_VERSION
 COPY --from=node /usr/local/bin/node /usr/local/bin/npm /usr/local/bin/
