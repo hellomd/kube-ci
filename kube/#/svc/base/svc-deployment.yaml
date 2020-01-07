@@ -47,6 +47,8 @@ spec:
           env:
             - name: PROJECT_NAME
               value: $PROJECT_NAME
+            - name: CLUSTER_REGION
+              value: "$CLUSTER_REGION_ID_PATH"
             - name: PROJECT_RESOURCE
               value: app
             - name: COMMIT_SHA1
