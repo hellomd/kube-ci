@@ -722,14 +722,14 @@ if [[ $has_main_deployment == "true" ]]; then
   echo "Calling kustomize on $kustomize_main_project_folder and saving output to $kuberootdir/kube.out/manifests/main.yaml"
   kustomize build $kustomize_main_project_folder >$kuberootdir/kube.out/manifests/main.yaml
   IMAGE=$APP_IMAGE $currentdir/replace-envs-on-file.sh -f $kuberootdir/kube.out/manifests/main.yaml -o \
-    '$ENV $PROJECT_NAME $COMMIT_SHA1 $IMAGE'
+    '$ENV $PROJECT_NAME $COMMIT_SHA1 $CLUSTER_REGION_ID $CLUSTER_REGION_ID_PATH $IMAGE'
 fi
 
 if [[ $has_worker_deployment == "true" ]]; then
   echo "Calling kustomize on $kustomize_worker_project_folder and saving output to $kuberootdir/kube.out/manifests/worker.yaml"
   kustomize build $kustomize_worker_project_folder >$kuberootdir/kube.out/manifests/worker.yaml
   IMAGE=$WORKER_IMAGE $currentdir/replace-envs-on-file.sh -f $kuberootdir/kube.out/manifests/worker.yaml -o \
-    '$ENV $PROJECT_NAME $COMMIT_SHA1 $IMAGE'
+    '$ENV $PROJECT_NAME $COMMIT_SHA1 $CLUSTER_REGION_ID $CLUSTER_REGION_ID_PATH $IMAGE'
 fi
 
 echo ""
