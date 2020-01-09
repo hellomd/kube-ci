@@ -8,5 +8,5 @@ spec:
       containers:
         - name: main
           resources:
-            limits:
+            requests:
               cpu: 150m

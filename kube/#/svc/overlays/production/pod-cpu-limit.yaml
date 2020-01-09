@@ -9,6 +9,4 @@ spec:
         - name: main
           resources:
             requests:
-              cpu: 150m
-            limits:
-              cpu: 600m
+              cpu: 200m
