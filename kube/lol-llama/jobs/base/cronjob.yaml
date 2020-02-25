@@ -1,0 +1,38 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: job-$PROJECT_NAME-$JOB_NAME
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: main
+              env:
+                # Postgres
+                - name: PGHOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: pgHost
+                - name: PGPORT
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: pgPort
+                - name: PGDATABASE
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: pgDatabase
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: pgUser
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: shared-env
+                      key: pgPassword

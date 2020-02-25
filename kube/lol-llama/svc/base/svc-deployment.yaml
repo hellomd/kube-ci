@@ -4,17 +4,10 @@ metadata:
   name: $PROJECT_NAME
 spec:
   template:
-    metadata:
-      annotations:
-        hellomd/logging.enabled: "true"
     spec:
       containers:
         - name: main
-          image: $IMAGE
           env:
-            # Disable APM for now since monitoring is not setup on this cluster yet
-            - name: ELASTIC_APM_ACTIVE
-              value: "true"
             # Overwrite some variables that are not retrieved from secrets anymore
             - name: GATEWAY_URL
               value: "http://gateway"
