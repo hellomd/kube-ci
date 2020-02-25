@@ -1,0 +1,10 @@
+bases:
+  - ../../../#/jobs/overlays/$ENV
+
+commonLabels:
+  hellomd/kind: cronjob
+  hellomd/language: nodejs
+  app: $PROJECT_NAME
+
+patchesStrategicMerge:
+  - cronjob.yaml
