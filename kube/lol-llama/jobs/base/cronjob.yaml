@@ -10,6 +10,10 @@ spec:
           containers:
             - name: main
               env:
+                # Overwrite some variables that are not retrieved from secrets anymore
+                - name: GATEWAY_URL
+                  value: "http://gateway"
+                  valueFrom: null
                 # Postgres
                 - name: PGHOST
                   valueFrom:
