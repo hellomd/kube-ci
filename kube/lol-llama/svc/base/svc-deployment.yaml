@@ -19,6 +19,9 @@ spec:
             - name: MAILGUN_DOMAIN
               valueFrom: null
               value: "NOT_SET"
+            # Async stack traces on knex
+            - name: HMD_KNEX_ASYNCSTACKTRACE
+              value: "true"
             # Postgres
             - name: PGHOST
               valueFrom:
